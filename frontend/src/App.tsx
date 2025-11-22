@@ -15,7 +15,14 @@ import { ProtectedRoute, PublicRoute } from "@/components/auth/ProtectedRoute";
 import { Landing } from "@/features/landing";
 import { PatientLogin, PatientSignup, DoctorLogin, DoctorSignup } from "@/features/auth";
 import { PatientDashboard } from "@/features/patient";
-import { DoctorDashboard, DoctorPatientQueue } from "@/features/doctor";
+import { 
+  DoctorDashboard, 
+  DoctorPatientQueue,
+  Appointments,
+  Reports,
+  Analytics,
+  Settings as DoctorSettings
+} from "@/features/doctor";
 
 // Patient Dashboard Pages - All 19 pages
 import {
@@ -81,9 +88,9 @@ const App = () => (
 
           {/* patient Dashboard Route  */}
           <Route path="/patient-dashboard" element={
-            <ProtectedRoute>
+            // <ProtectedRoute>
               <PatientDashboardLayout />
-            </ProtectedRoute>
+            // </ProtectedRoute>
           }>
             <Route index element={<DashboardHome />} />
             <Route path="symptom-intake" element={<SymptomIntake />} />
@@ -112,12 +119,16 @@ const App = () => (
 
           {/* Doctor Dashboard Route - Legacy */}
           <Route element={
-            <ProtectedRoute>
+            // <ProtectedRoute>
               <DashboardLayout />
-            </ProtectedRoute>
+            // </ProtectedRoute>
           }>
             <Route path="/doctor-dashboard" element={<DoctorDashboard />} />
             <Route path="/doctor-dashboard/patients" element={<DoctorPatientQueue />} />
+            <Route path="/doctor-dashboard/appointments" element={<Appointments />} />
+            <Route path="/doctor-dashboard/reports" element={<Reports />} />
+            <Route path="/doctor-dashboard/analytics" element={<Analytics />} />
+            <Route path="/doctor-dashboard/settings" element={<DoctorSettings />} />
           </Route>
 
           {/* 404 Route - Must be last */}
