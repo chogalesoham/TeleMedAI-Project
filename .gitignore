@@ -1,0 +1,347 @@
+# TeleMedAI Project - Comprehensive .gitignore
+
+# ============================================
+# Operating System Files
+# ============================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Linux
+*~
+.directory
+
+# ============================================
+# IDE & Editor Files
+# ============================================
+
+# Visual Studio Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# JetBrains IDEs
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-rt-v][a-z]
+[._]ss[a-gi-z]
+[._]sw[a-p]
+
+# ============================================
+# Frontend (React/Vite)
+# ============================================
+
+# Dependencies
+frontend/node_modules/
+frontend/.pnp
+frontend/.pnp.js
+
+# Build output
+frontend/dist/
+frontend/build/
+frontend/.cache/
+
+# Environment variables
+frontend/.env
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+
+# Logs
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/pnpm-debug.log*
+frontend/lerna-debug.log*
+
+# Testing
+frontend/coverage/
+frontend/.nyc_output
+
+# Vite
+frontend/.vite/
+
+# TypeScript
+frontend/*.tsbuildinfo
+
+# ============================================
+# Backend (Node.js/Express)
+# ============================================
+
+# Dependencies
+backend/node_modules/
+backend/.pnp
+backend/.pnp.js
+
+# Environment variables
+backend/.env
+backend/.env.local
+backend/.env.development
+backend/.env.test
+backend/.env.production
+
+# Logs
+backend/logs/
+backend/*.log
+backend/npm-debug.log*
+backend/yarn-debug.log*
+backend/yarn-error.log*
+backend/pnpm-debug.log*
+
+# Testing
+backend/coverage/
+backend/.nyc_output
+
+# Build output
+backend/dist/
+backend/build/
+
+# ============================================
+# AI-ML (Python)
+# ============================================
+
+# Python
+AI-ML/__pycache__/
+AI-ML/*.py[cod]
+AI-ML/*$py.class
+AI-ML/*.so
+AI-ML/.Python
+
+# Virtual Environments
+AI-ML/venv/
+AI-ML/env/
+AI-ML/ENV/
+AI-ML/.venv/
+AI-ML/virtualenv/
+
+# Distribution / packaging
+AI-ML/dist/
+AI-ML/build/
+AI-ML/*.egg-info/
+AI-ML/.eggs/
+AI-ML/wheels/
+
+# PyInstaller
+AI-ML/*.manifest
+AI-ML/*.spec
+
+# Unit test / coverage
+AI-ML/.pytest_cache/
+AI-ML/.coverage
+AI-ML/htmlcov/
+AI-ML/.tox/
+AI-ML/.hypothesis/
+
+# Jupyter Notebook
+AI-ML/.ipynb_checkpoints/
+AI-ML/*.ipynb
+
+# ML Models & Data
+AI-ML/models/*.pkl
+AI-ML/models/*.h5
+AI-ML/models/*.pt
+AI-ML/models/*.pth
+AI-ML/models/*.onnx
+AI-ML/data/raw/
+AI-ML/data/processed/
+AI-ML/*.csv
+AI-ML/*.json
+AI-ML/*.parquet
+
+# ML Experiments
+AI-ML/mlruns/
+AI-ML/lightning_logs/
+AI-ML/wandb/
+AI-ML/tensorboard/
+
+# Environment
+AI-ML/.env
+AI-ML/.env.local
+
+# ============================================
+# Database
+# ============================================
+
+# SQLite
+*.db
+*.sqlite
+*.sqlite3
+
+# PostgreSQL
+*.dump
+*.sql
+
+# MongoDB
+*.bson
+
+# ============================================
+# Logs & Temporary Files
+# ============================================
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# PID files
+*.pid
+*.seed
+*.pid.lock
+
+# ============================================
+# Security & Credentials
+# ============================================
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Credentials
+*.pem
+*.key
+*.cert
+*.crt
+*.p12
+*.pfx
+secrets/
+credentials/
+
+# API Keys
+api-keys.json
+secrets.json
+
+# ============================================
+# Docker
+# ============================================
+
+# Docker files (optional)
+# Uncomment if not tracking docker files
+# Dockerfile
+# docker-compose.yml
+# .dockerignore
+
+# Docker volumes
+docker-volumes/
+
+# ============================================
+# CI/CD
+# ============================================
+
+# GitHub Actions artifacts
+.github/workflows/artifacts/
+
+# CircleCI
+.circleci/
+
+# ============================================
+# Package Managers
+# ============================================
+
+# npm
+package-lock.json
+npm-debug.log*
+
+# yarn
+yarn.lock
+.yarn/
+.yarnrc.yml
+
+# pnpm
+pnpm-lock.yaml
+
+# Bun
+bun.lockb
+
+# ============================================
+# Build Artifacts
+# ============================================
+
+dist/
+build/
+out/
+*.bundle.js
+*.bundle.css
+
+# ============================================
+# Misc
+# ============================================
+
+# Archives
+*.zip
+*.tar
+*.tar.gz
+*.rar
+*.7z
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Debug files
+debug/
+*.debug
+
+# Documentation builds
+docs/_build/
+docs/.doctrees/
+
+# ============================================
+# Project Specific
+# ============================================
+
+# Medical data (HIPAA compliance)
+patient-data/
+medical-records/
+phi/
+
+# Test data
+test-data/
+mock-data/
+
+# Uploads
+uploads/
+attachments/
+
+# Cache
+.cache/
+*.cache
