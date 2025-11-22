@@ -41,7 +41,20 @@ export const PatientLogin = () => {
 
     // Simulate API call
     setTimeout(() => {
+      // Store authentication data
+      const mockToken = 'mock-jwt-token-' + Date.now();
+      localStorage.setItem('authToken', mockToken);
+      localStorage.setItem('userRole', 'patient');
+      localStorage.setItem('userData', JSON.stringify({
+        id: '1',
+        name: 'John Doe',
+        email: formData.email,
+        role: 'patient'
+      }));
+
       setIsLoading(false);
+      
+      // Redirect to patient dashboard
       navigate('/patient-dashboard');
     }, 1500);
   };
