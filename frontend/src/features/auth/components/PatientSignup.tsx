@@ -4,7 +4,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Input } from '@/components/shared';
 import { Select } from '@/components/shared';
 import { Button } from '@/components/ui/button';
-import { Mail, Lock, User, Phone, Calendar, Users2, ArrowRight, Heart, Shield } from 'lucide-react';
+import { Mail, Lock, User, Phone, Calendar, Users2, ArrowRight, Heart, Shield, CheckCircle2, Clock } from 'lucide-react';
 import { authAnimations } from '@/constants/authAnimations';
 
 const GENDER_OPTIONS = [
@@ -64,75 +64,84 @@ export const PatientSignup = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-blue-50/30 to-cyan-50/30 flex items-center justify-center p-4 py-12">
-      {/* Background decoration */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:4rem_4rem]" />
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 flex items-center justify-center p-4 py-12 relative overflow-hidden">
+      {/* Enhanced Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:3rem_3rem]" />
         <motion.div
-          className="absolute top-20 -left-20 w-96 h-96 bg-primary/10 rounded-full blur-3xl"
-          animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
-          transition={{ duration: 8, repeat: Infinity }}
+          className="absolute top-0 left-0 w-[500px] h-[500px] bg-gradient-to-br from-blue-400/20 to-cyan-400/20 rounded-full blur-3xl"
+          animate={{ scale: [1, 1.2, 1], x: [0, 50, 0], y: [0, 30, 0] }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
         />
         <motion.div
-          className="absolute bottom-20 -right-20 w-96 h-96 bg-accent/10 rounded-full blur-3xl"
-          animate={{ scale: [1.2, 1, 1.2], opacity: [0.3, 0.5, 0.3] }}
-          transition={{ duration: 8, repeat: Infinity, delay: 1 }}
+          className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-gradient-to-br from-purple-400/15 to-pink-400/15 rounded-full blur-3xl"
+          animate={{ scale: [1.2, 1, 1.2], x: [0, -30, 0], y: [0, -50, 0] }}
+          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut", delay: 1 }}
         />
       </div>
 
       <div className="w-full max-w-6xl mx-auto relative z-10">
-        <div className="grid lg:grid-cols-2 gap-8 items-center">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
           {/* Left Side - Branding */}
           <motion.div
             variants={authAnimations.slideInLeft}
             initial="hidden"
             animate="visible"
-            className="hidden lg:block space-y-6"
+            className="hidden lg:block space-y-8"
           >
-            <Link to="/" className="inline-flex items-center space-x-2 mb-8">
-              <img src="/logo.png" alt="TeleMedAI" className="h-10 w-10" />
-              <span className="text-2xl font-bold text-gray-900">
-                TeleMed<span className="text-primary">AI</span>
+            <Link to="/" className="inline-flex items-center space-x-3 group">
+              <div className="w-12 h-12 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow">
+                <Heart className="w-6 h-6 text-white" />
+              </div>
+              <span className="text-3xl font-bold text-gray-900">
+                TeleMed<span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">AI</span>
               </span>
             </Link>
             
+            <motion.div 
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border border-blue-200/50 backdrop-blur-sm"
+              whileHover={{ scale: 1.05 }}
+              transition={{ type: "spring", stiffness: 300 }}
+            >
+              <Heart className="w-5 h-5 text-blue-600" />
+              <span className="text-sm font-semibold text-blue-700">Join as Patient</span>
+            </motion.div>
+            
             <div className="space-y-4">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
-                <Heart className="w-4 h-4 text-primary" />
-                <span className="text-sm font-semibold text-primary">Join as Patient</span>
-              </div>
-              
-              <h1 className="text-5xl font-bold leading-tight">
+              <h1 className="text-5xl lg:text-6xl font-bold leading-tight">
                 Start Your{' '}
-                <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-blue-600 via-cyan-600 to-teal-600 bg-clip-text text-transparent">
                   Health Journey
                 </span>
               </h1>
               
-              <p className="text-xl text-muted-foreground">
+              <p className="text-xl text-gray-600 leading-relaxed">
                 Create your account and get access to world-class healthcare services powered by AI.
               </p>
             </div>
 
-            <div className="space-y-4 pt-8">
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <Shield className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-semibold mb-1">Secure & Private</h3>
-                  <p className="text-sm text-muted-foreground">Your health data is encrypted and HIPAA compliant</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0">
-                  <Users2 className="w-5 h-5 text-accent" />
-                </div>
-                <div>
-                  <h3 className="font-semibold mb-1">Expert Doctors</h3>
-                  <p className="text-sm text-muted-foreground">Access to verified healthcare professionals</p>
-                </div>
-              </div>
+            <div className="space-y-4 pt-4">
+              {[
+                { icon: Shield, title: 'Secure & Private', desc: 'Your health data is encrypted and HIPAA compliant' },
+                { icon: Clock, title: 'Quick Setup', desc: 'Get started in less than 2 minutes' },
+                { icon: CheckCircle2, title: 'Verified Care', desc: 'All doctors are licensed and verified' }
+              ].map((benefit, index) => (
+                <motion.div
+                  key={benefit.title}
+                  className="flex items-start gap-4 p-4 rounded-xl bg-white/60 backdrop-blur-sm border border-gray-200/50 hover:shadow-md transition-shadow"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.2 + index * 0.1 }}
+                >
+                  <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center flex-shrink-0 shadow-lg">
+                    <benefit.icon className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-1">{benefit.title}</h3>
+                    <p className="text-sm text-gray-600">{benefit.desc}</p>
+                  </div>
+                </motion.div>
+              ))}
             </div>
           </motion.div>
 
@@ -142,18 +151,20 @@ export const PatientSignup = () => {
             initial="hidden"
             animate="visible"
           >
-            <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8 lg:p-12">
+            <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-gray-200/50 p-8 lg:p-10">
               {/* Mobile Logo */}
-              <Link to="/" className="lg:hidden flex items-center space-x-2 mb-8">
-                <img src="/logo.png" alt="TeleMedAI" className="h-8 w-8" />
-                <span className="text-xl font-bold text-gray-900">
-                  TeleMed<span className="text-primary">AI</span>
+              <Link to="/" className="lg:hidden flex items-center space-x-3 mb-8 group">
+                <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center shadow-lg">
+                  <Heart className="w-5 h-5 text-white" />
+                </div>
+                <span className="text-2xl font-bold text-gray-900">
+                  TeleMed<span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">AI</span>
                 </span>
               </Link>
 
               <div className="mb-8">
-                <h2 className="text-3xl font-bold mb-2">Create Patient Account</h2>
-                <p className="text-muted-foreground">
+                <h2 className="text-3xl font-bold text-gray-900 mb-2">Create Patient Account</h2>
+                <p className="text-gray-600">
                   Fill in your details to get started
                 </p>
               </div>
@@ -167,7 +178,7 @@ export const PatientSignup = () => {
                   value={formData.fullName}
                   onChange={handleChange}
                   error={errors.fullName}
-                  icon={<User className="w-4 h-4" />}
+                  icon={<User className="w-5 h-5" />}
                   required
                 />
 
@@ -180,7 +191,7 @@ export const PatientSignup = () => {
                     value={formData.email}
                     onChange={handleChange}
                     error={errors.email}
-                    icon={<Mail className="w-4 h-4" />}
+                    icon={<Mail className="w-5 h-5" />}
                     required
                   />
 
@@ -192,7 +203,7 @@ export const PatientSignup = () => {
                     value={formData.phone}
                     onChange={handleChange}
                     error={errors.phone}
-                    icon={<Phone className="w-4 h-4" />}
+                    icon={<Phone className="w-5 h-5" />}
                     required
                   />
                 </div>
@@ -208,7 +219,7 @@ export const PatientSignup = () => {
                     value={formData.age}
                     onChange={handleChange}
                     error={errors.age}
-                    icon={<Calendar className="w-4 h-4" />}
+                    icon={<Calendar className="w-5 h-5" />}
                     required
                   />
 
@@ -228,11 +239,11 @@ export const PatientSignup = () => {
                   label="Password"
                   type="password"
                   name="password"
-                  placeholder="••••••••"
+                  placeholder="Create a strong password (min. 8 characters)"
                   value={formData.password}
                   onChange={handleChange}
                   error={errors.password}
-                  icon={<Lock className="w-4 h-4" />}
+                  icon={<Lock className="w-5 h-5" />}
                   required
                 />
 
@@ -240,11 +251,11 @@ export const PatientSignup = () => {
                   label="Confirm Password"
                   type="password"
                   name="confirmPassword"
-                  placeholder="••••••••"
+                  placeholder="Re-enter your password"
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   error={errors.confirmPassword}
-                  icon={<Lock className="w-4 h-4" />}
+                  icon={<Lock className="w-5 h-5" />}
                   required
                 />
 
@@ -253,9 +264,9 @@ export const PatientSignup = () => {
                     type="checkbox"
                     id="terms"
                     required
-                    className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary mt-1"
+                    className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary focus:ring-offset-0 mt-1"
                   />
-                  <label htmlFor="terms" className="text-sm text-muted-foreground">
+                  <label htmlFor="terms" className="text-sm text-gray-600">
                     I agree to the{' '}
                     <Link to="/terms" className="text-primary hover:text-primary/80 font-medium">
                       Terms of Service
@@ -271,7 +282,7 @@ export const PatientSignup = () => {
                   type="submit"
                   size="lg"
                   disabled={isLoading}
-                  className="w-full group bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
+                  className="w-full group bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white shadow-lg hover:shadow-xl transition-all"
                 >
                   {isLoading ? (
                     <>
@@ -284,26 +295,36 @@ export const PatientSignup = () => {
                     </>
                   ) : (
                     <>
-                      Create Account
+                      <span>Create Account</span>
                       <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                     </>
                   )}
                 </Button>
+              </form>
 
-                <p className="text-center text-sm text-muted-foreground">
+              {/* Sign In Link */}
+              <div className="mt-8 text-center">
+                <p className="text-gray-600">
                   Already have an account?{' '}
-                  <Link to="/patient-login" className="text-primary hover:text-primary/80 font-semibold">
+                  <Link to="/patient-login" className="font-semibold text-primary hover:text-primary/80 transition-colors">
                     Sign in
                   </Link>
                 </p>
+              </div>
 
-                <p className="text-center text-xs text-muted-foreground pt-2">
-                  Are you a doctor?{' '}
-                  <Link to="/doctor-signup" className="text-accent hover:text-accent/80 font-semibold">
-                    Register here
-                  </Link>
-                </p>
-              </form>
+              {/* Trust Badges */}
+              <div className="mt-8 pt-6 border-t border-gray-200">
+                <div className="flex items-center justify-center gap-6 text-xs text-gray-500">
+                  <div className="flex items-center gap-1">
+                    <Shield className="w-4 h-4" />
+                    <span>HIPAA Compliant</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Lock className="w-4 h-4" />
+                    <span>256-bit Encryption</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </motion.div>
         </div>

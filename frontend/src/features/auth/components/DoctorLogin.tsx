@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
 import { Input } from '@/components/shared';
 import { Button } from '@/components/ui/button';
-import { Mail, Lock, Stethoscope, ArrowRight, Award, Users, TrendingUp } from 'lucide-react';
+import { Mail, Lock, Stethoscope, ArrowRight, Award, Users, TrendingUp, Shield, CheckCircle2 } from 'lucide-react';
 import { authAnimations } from '@/constants/authAnimations';
 
 export const DoctorLogin = () => {
@@ -11,6 +11,7 @@ export const DoctorLogin = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
+    rememberMe: false,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
@@ -19,10 +20,18 @@ export const DoctorLogin = () => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Simple validation
+    // Enhanced validation
     const newErrors: Record<string, string> = {};
-    if (!formData.email) newErrors.email = 'Email is required';
-    if (!formData.password) newErrors.password = 'Password is required';
+    if (!formData.email) {
+      newErrors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Invalid email format';
+    }
+    if (!formData.password) {
+      newErrors.password = 'Password is required';
+    } else if (formData.password.length < 8) {
+      newErrors.password = 'Password must be at least 8 characters';
+    }
     
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -38,91 +47,99 @@ export const DoctorLogin = () => {
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-    if (errors[e.target.name]) {
-      setErrors({ ...errors, [e.target.name]: '' });
+    const { name, value, type, checked } = e.target;
+    setFormData({ 
+      ...formData, 
+      [name]: type === 'checkbox' ? checked : value 
+    });
+    if (errors[name]) {
+      setErrors({ ...errors, [name]: '' });
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-purple-50/30 to-indigo-50/30 flex items-center justify-center p-4">
-      {/* Background decoration */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:4rem_4rem]" />
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-indigo-50 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Enhanced Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:3rem_3rem]" />
         <motion.div
-          className="absolute top-20 -left-20 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"
-          animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
-          transition={{ duration: 8, repeat: Infinity }}
+          className="absolute top-0 left-0 w-[500px] h-[500px] bg-gradient-to-br from-purple-400/20 to-indigo-400/20 rounded-full blur-3xl"
+          animate={{ scale: [1, 1.2, 1], x: [0, 50, 0], y: [0, 30, 0] }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
         />
         <motion.div
-          className="absolute bottom-20 -right-20 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl"
-          animate={{ scale: [1.2, 1, 1.2], opacity: [0.3, 0.5, 0.3] }}
-          transition={{ duration: 8, repeat: Infinity, delay: 1 }}
+          className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-gradient-to-br from-pink-400/15 to-violet-400/15 rounded-full blur-3xl"
+          animate={{ scale: [1.2, 1, 1.2], x: [0, -30, 0], y: [0, -50, 0] }}
+          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut", delay: 1 }}
         />
       </div>
 
       <div className="w-full max-w-6xl mx-auto relative z-10">
-        <div className="grid lg:grid-cols-2 gap-8 items-center">
-          {/* Left Side - Branding */}
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+          {/* Left Side - Branding & Benefits */}
           <motion.div
             variants={authAnimations.slideInLeft}
             initial="hidden"
             animate="visible"
-            className="hidden lg:block space-y-6"
+            className="hidden lg:block space-y-8"
           >
-            <Link to="/" className="inline-flex items-center space-x-2 mb-8">
-              <img src="/logo.png" alt="TeleMedAI" className="h-10 w-10" />
-              <span className="text-2xl font-bold text-gray-900">
-                TeleMed<span className="text-primary">AI</span>
+            {/* Logo */}
+            <Link to="/" className="inline-flex items-center space-x-3 group">
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow">
+                <Stethoscope className="w-6 h-6 text-white" />
+              </div>
+              <span className="text-3xl font-bold text-gray-900">
+                TeleMed<span className="bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">AI</span>
               </span>
             </Link>
             
+            {/* Badge */}
+            <motion.div 
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-purple-500/10 to-indigo-500/10 border border-purple-200/50 backdrop-blur-sm"
+              whileHover={{ scale: 1.05 }}
+              transition={{ type: "spring", stiffness: 300 }}
+            >
+              <Stethoscope className="w-5 h-5 text-purple-600" />
+              <span className="text-sm font-semibold text-purple-700">Doctor Portal</span>
+            </motion.div>
+            
+            {/* Heading */}
             <div className="space-y-4">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/10 border border-purple-500/20">
-                <Stethoscope className="w-4 h-4 text-purple-600" />
-                <span className="text-sm font-semibold text-purple-600">Doctor Portal</span>
-              </div>
-              
-              <h1 className="text-5xl font-bold leading-tight">
+              <h1 className="text-5xl lg:text-6xl font-bold leading-tight">
                 Welcome Back,{' '}
-                <span className="bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-purple-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent">
                   Doctor
                 </span>
               </h1>
               
-              <p className="text-xl text-muted-foreground">
+              <p className="text-xl text-gray-600 leading-relaxed">
                 Access your practice dashboard, manage appointments, and provide exceptional care with AI assistance.
               </p>
             </div>
 
-            <div className="space-y-4 pt-8">
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center flex-shrink-0">
-                  <Award className="w-5 h-5 text-purple-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold mb-1">AI-Powered Diagnostics</h3>
-                  <p className="text-sm text-muted-foreground">Get intelligent suggestions during consultations</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-lg bg-indigo-500/10 flex items-center justify-center flex-shrink-0">
-                  <Users className="w-5 h-5 text-indigo-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold mb-1">Patient Management</h3>
-                  <p className="text-sm text-muted-foreground">Streamlined workflows for better care</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-lg bg-cyan-500/10 flex items-center justify-center flex-shrink-0">
-                  <TrendingUp className="w-5 h-5 text-cyan-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold mb-1">Practice Analytics</h3>
-                  <p className="text-sm text-muted-foreground">Insights to grow your practice</p>
-                </div>
-              </div>
+            {/* Benefits List */}
+            <div className="space-y-4 pt-4">
+              {[
+                { icon: Award, title: 'AI-Powered Diagnostics', desc: 'Get intelligent suggestions during consultations' },
+                { icon: Users, title: 'Patient Management', desc: 'Streamlined workflows for better care' },
+                { icon: CheckCircle2, title: 'Verified Platform', desc: 'Secure and compliant with medical standards' }
+              ].map((benefit, index) => (
+                <motion.div
+                  key={benefit.title}
+                  className="flex items-start gap-4 p-4 rounded-xl bg-white/60 backdrop-blur-sm border border-gray-200/50 hover:shadow-md transition-shadow"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.2 + index * 0.1 }}
+                >
+                  <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center flex-shrink-0 shadow-lg">
+                    <benefit.icon className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-1">{benefit.title}</h3>
+                    <p className="text-sm text-gray-600">{benefit.desc}</p>
+                  </div>
+                </motion.div>
+              ))}
             </div>
           </motion.div>
 
@@ -132,22 +149,26 @@ export const DoctorLogin = () => {
             initial="hidden"
             animate="visible"
           >
-            <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8 lg:p-12">
+            <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-gray-200/50 p-8 lg:p-10">
               {/* Mobile Logo */}
-              <Link to="/" className="lg:hidden flex items-center space-x-2 mb-8">
-                <img src="/logo.png" alt="TeleMedAI" className="h-8 w-8" />
-                <span className="text-xl font-bold text-gray-900">
-                  TeleMed<span className="text-primary">AI</span>
+              <Link to="/" className="lg:hidden flex items-center space-x-3 mb-8 group">
+                <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+                  <Stethoscope className="w-5 h-5 text-white" />
+                </div>
+                <span className="text-2xl font-bold text-gray-900">
+                  TeleMed<span className="bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">AI</span>
                 </span>
               </Link>
 
+              {/* Form Header */}
               <div className="mb-8">
-                <h2 className="text-3xl font-bold mb-2">Doctor Login</h2>
-                <p className="text-muted-foreground">
+                <h2 className="text-3xl font-bold text-gray-900 mb-2">Doctor Login</h2>
+                <p className="text-gray-600">
                   Access your medical practice dashboard
                 </p>
               </div>
 
+              {/* Login Form */}
               <form onSubmit={handleSubmit} className="space-y-6">
                 <Input
                   label="Professional Email"
@@ -157,7 +178,7 @@ export const DoctorLogin = () => {
                   value={formData.email}
                   onChange={handleChange}
                   error={errors.email}
-                  icon={<Mail className="w-4 h-4" />}
+                  icon={<Mail className="w-5 h-5" />}
                   required
                 />
 
@@ -165,20 +186,29 @@ export const DoctorLogin = () => {
                   label="Password"
                   type="password"
                   name="password"
-                  placeholder="••••••••"
+                  placeholder="Enter your password"
                   value={formData.password}
                   onChange={handleChange}
                   error={errors.password}
-                  icon={<Lock className="w-4 h-4" />}
+                  icon={<Lock className="w-5 h-5" />}
                   required
                 />
 
-                <div className="flex items-center justify-between text-sm">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-600" />
-                    <span className="text-muted-foreground">Remember me</span>
+                <div className="flex items-center justify-between">
+                  <label className="flex items-center gap-2 cursor-pointer group">
+                    <input 
+                      type="checkbox" 
+                      name="rememberMe"
+                      checked={formData.rememberMe}
+                      onChange={handleChange}
+                      className="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-600 focus:ring-offset-0"
+                    />
+                    <span className="text-sm text-gray-700 group-hover:text-gray-900">Remember me</span>
                   </label>
-                  <Link to="/forgot-password" className="text-purple-600 hover:text-purple-600/80 font-medium">
+                  <Link 
+                    to="/forgot-password" 
+                    className="text-sm font-medium text-purple-600 hover:text-purple-600/80 transition-colors"
+                  >
                     Forgot password?
                   </Link>
                 </div>
@@ -187,7 +217,7 @@ export const DoctorLogin = () => {
                   type="submit"
                   size="lg"
                   disabled={isLoading}
-                  className="w-full group bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-600/90 hover:to-indigo-600/90 text-white"
+                  className="w-full group bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all"
                 >
                   {isLoading ? (
                     <>
@@ -200,47 +230,52 @@ export const DoctorLogin = () => {
                     </>
                   ) : (
                     <>
-                      Sign In to Dashboard
+                      <span>Sign In to Dashboard</span>
                       <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                     </>
                   )}
                 </Button>
 
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-200" />
-                  </div>
-                  <div className="relative flex justify-center text-sm">
-                    <span className="px-4 bg-white text-muted-foreground">Verified professionals only</span>
-                  </div>
-                </div>
-
-                <div className="bg-purple-50/50 border border-purple-200/50 rounded-xl p-4">
+                {/* Verification Notice */}
+                <div className="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200/50 rounded-xl p-4">
                   <div className="flex items-start gap-3">
-                    <Award className="w-5 h-5 text-purple-600 flex-shrink-0 mt-0.5" />
+                    <Shield className="w-5 h-5 text-purple-600 flex-shrink-0 mt-0.5" />
                     <div className="text-sm">
-                      <p className="font-medium text-purple-900 mb-1">Professional Verification</p>
-                      <p className="text-purple-700/80">
+                      <p className="font-semibold text-purple-900 mb-1">Professional Verification</p>
+                      <p className="text-purple-700">
                         All accounts are verified with medical license credentials for patient safety.
                       </p>
                     </div>
                   </div>
                 </div>
+              </form>
 
-                <p className="text-center text-sm text-muted-foreground">
+              {/* Sign Up Link */}
+              <div className="mt-8 text-center">
+                <p className="text-gray-600">
                   Not registered yet?{' '}
-                  <Link to="/doctor-signup" className="text-purple-600 hover:text-purple-600/80 font-semibold">
+                  <Link 
+                    to="/doctor-signup" 
+                    className="font-semibold text-purple-600 hover:text-purple-600/80 transition-colors"
+                  >
                     Apply now
                   </Link>
                 </p>
+              </div>
 
-                <p className="text-center text-xs text-muted-foreground pt-4">
-                  Are you a patient?{' '}
-                  <Link to="/patient-login" className="text-primary hover:text-primary/80 font-semibold">
-                    Login here
-                  </Link>
-                </p>
-              </form>
+              {/* Trust Badges */}
+              <div className="mt-8 pt-6 border-t border-gray-200">
+                <div className="flex items-center justify-center gap-6 text-xs text-gray-500">
+                  <div className="flex items-center gap-1">
+                    <Shield className="w-4 h-4" />
+                    <span>HIPAA Compliant</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Lock className="w-4 h-4" />
+                    <span>256-bit Encryption</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </motion.div>
         </div>
