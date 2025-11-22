@@ -11,7 +11,7 @@ import { MainLayout, DashboardLayout } from "@/layouts";
 import { Landing } from "@/features/landing";
 import { PatientLogin, PatientSignup, DoctorLogin, DoctorSignup } from "@/features/auth";
 import { PatientDashboard } from "@/features/patient";
-import { DoctorDashboard } from "@/features/doctor";
+import { DoctorDashboard, DoctorPatientQueue } from "@/features/doctor";
 
 // Pages
 import NotFound from "@/pages/NotFound";
@@ -40,6 +40,7 @@ const App = () => (
           <Route element={<DashboardLayout />}>
             <Route path="/patient-dashboard" element={<PatientDashboard />} />
             <Route path="/doctor-dashboard" element={<DoctorDashboard />} />
+            <Route path="/doctor-dashboard/patients" element={<DoctorPatientQueue />} />
           </Route>
 
           {/* 404 Route - Must be last */}
