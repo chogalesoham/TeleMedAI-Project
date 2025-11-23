@@ -53,41 +53,41 @@ export const AppointmentBooking = () => {
   };
 
   return (
-    <div className="mx-auto space-y-6">
+    <div className="mx-auto space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-          <ArrowLeft className="w-5 h-5" />
+      <div className="flex items-center gap-2 sm:gap-4">
+        <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="h-8 w-8 sm:h-10 sm:w-10">
+          <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
         </Button>
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Book Appointment</h1>
-          <p className="text-gray-600">Schedule your consultation with {doctor.name}</p>
+        <div className="min-w-0 flex-1">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-0.5 sm:mb-2 truncate">Book Appointment</h1>
+          <p className="text-xs sm:text-sm md:text-base text-gray-600 truncate">Schedule your consultation with {doctor.name}</p>
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Main Booking Form */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-4 sm:space-y-6">
           {/* Doctor Info Card */}
           <Card>
-            <CardContent className="p-6">
-              <div className="flex items-start gap-4">
-                <Avatar className="w-20 h-20">
+            <CardContent className="p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
+                <Avatar className="w-16 h-16 sm:w-20 sm:h-20">
                   <AvatarImage src={doctor.image} />
                   <AvatarFallback>{doctor.name[4]}{doctor.name.split(' ')[1]?.[0]}</AvatarFallback>
                 </Avatar>
-                <div className="flex-1">
-                  <h3 className="text-xl font-semibold text-gray-900">{doctor.name}</h3>
-                  <p className="text-gray-600">{doctor.specialization}</p>
-                  <p className="text-sm text-gray-500 mt-1">{doctor.experience} years experience</p>
-                  <div className="flex items-center gap-4 mt-2">
-                    <Badge variant="secondary">{doctor.rating} ⭐</Badge>
-                    <span className="text-sm text-gray-600">{doctor.location}</span>
+                <div className="flex-1 min-w-0 w-full sm:w-auto">
+                  <h3 className="text-lg sm:text-xl font-semibold text-gray-900">{doctor.name}</h3>
+                  <p className="text-sm sm:text-base text-gray-600">{doctor.specialization}</p>
+                  <p className="text-xs sm:text-sm text-gray-500 mt-1">{doctor.experience} years experience</p>
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-4 mt-2">
+                    <Badge variant="secondary" className="text-xs">{doctor.rating} ⭐</Badge>
+                    <span className="text-xs sm:text-sm text-gray-600 truncate">{doctor.location}</span>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-sm text-gray-600">Consultation Fee</p>
-                  <p className="text-2xl font-bold text-primary">${doctor.consultationFee}</p>
+                <div className="text-left sm:text-right w-full sm:w-auto">
+                  <p className="text-xs sm:text-sm text-gray-600">Consultation Fee</p>
+                  <p className="text-xl sm:text-2xl font-bold text-primary">${doctor.consultationFee}</p>
                 </div>
               </div>
             </CardContent>
@@ -95,30 +95,30 @@ export const AppointmentBooking = () => {
 
           {/* Consultation Type */}
           <Card>
-            <CardContent className="p-6">
-              <Label className="text-base font-semibold mb-3 block">Select Consultation Type</Label>
-              <div className="grid sm:grid-cols-2 gap-4">
+            <CardContent className="p-4 sm:p-6">
+              <Label className="text-sm sm:text-base font-semibold mb-2 sm:mb-3 block">Select Consultation Type</Label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <motion.div
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => setConsultationType('video')}
                   className={`
-                    relative p-6 rounded-lg border-2 cursor-pointer transition-colors
+                    relative p-4 sm:p-6 rounded-lg border-2 cursor-pointer transition-colors
                     ${consultationType === 'video' ? 'border-primary bg-primary/5' : 'border-gray-200 hover:border-gray-300'}
                   `}
                 >
-                  <div className="flex flex-col items-center text-center gap-3">
-                    <div className={`w-16 h-16 rounded-full flex items-center justify-center ${
+                  <div className="flex flex-col items-center text-center gap-2 sm:gap-3">
+                    <div className={`w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center ${
                       consultationType === 'video' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-600'
                     }`}>
-                      <Video className="w-8 h-8" />
+                      <Video className="w-6 h-6 sm:w-8 sm:h-8" />
                     </div>
                     <div>
-                      <p className="font-semibold text-gray-900">Video Consultation</p>
-                      <p className="text-sm text-gray-600 mt-1">Consult from anywhere</p>
+                      <p className="font-semibold text-gray-900 text-sm sm:text-base">Video Consultation</p>
+                      <p className="text-xs sm:text-sm text-gray-600 mt-0.5 sm:mt-1">Consult from anywhere</p>
                     </div>
                     {consultationType === 'video' && (
-                      <CheckCircle2 className="absolute top-4 right-4 w-6 h-6 text-primary" />
+                      <CheckCircle2 className="absolute top-2 right-2 sm:top-4 sm:right-4 w-5 h-5 sm:w-6 sm:h-6 text-primary" />
                     )}
                   </div>
                 </motion.div>
@@ -128,22 +128,22 @@ export const AppointmentBooking = () => {
                   whileTap={{ scale: 0.98 }}
                   onClick={() => setConsultationType('in-person')}
                   className={`
-                    relative p-6 rounded-lg border-2 cursor-pointer transition-colors
+                    relative p-4 sm:p-6 rounded-lg border-2 cursor-pointer transition-colors
                     ${consultationType === 'in-person' ? 'border-primary bg-primary/5' : 'border-gray-200 hover:border-gray-300'}
                   `}
                 >
-                  <div className="flex flex-col items-center text-center gap-3">
-                    <div className={`w-16 h-16 rounded-full flex items-center justify-center ${
+                  <div className="flex flex-col items-center text-center gap-2 sm:gap-3">
+                    <div className={`w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center ${
                       consultationType === 'in-person' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-600'
                     }`}>
-                      <MapPin className="w-8 h-8" />
+                      <MapPin className="w-6 h-6 sm:w-8 sm:h-8" />
                     </div>
                     <div>
-                      <p className="font-semibold text-gray-900">In-Person Visit</p>
-                      <p className="text-sm text-gray-600 mt-1">Visit doctor's clinic</p>
+                      <p className="font-semibold text-gray-900 text-sm sm:text-base">In-Person Visit</p>
+                      <p className="text-xs sm:text-sm text-gray-600 mt-0.5 sm:mt-1">Visit doctor's clinic</p>
                     </div>
                     {consultationType === 'in-person' && (
-                      <CheckCircle2 className="absolute top-4 right-4 w-6 h-6 text-primary" />
+                      <CheckCircle2 className="absolute top-2 right-2 sm:top-4 sm:right-4 w-5 h-5 sm:w-6 sm:h-6 text-primary" />
                     )}
                   </div>
                 </motion.div>
@@ -153,15 +153,15 @@ export const AppointmentBooking = () => {
 
           {/* Date Selection */}
           <Card>
-            <CardContent className="p-6">
-              <Label className="text-base font-semibold mb-3 block">Select Date</Label>
-              <div className="flex justify-center">
+            <CardContent className="p-4 sm:p-6">
+              <Label className="text-sm sm:text-base font-semibold mb-2 sm:mb-3 block">Select Date</Label>
+              <div className="flex justify-center overflow-x-auto">
                 <Calendar
                   mode="single"
                   selected={selectedDate}
                   onSelect={setSelectedDate}
                   disabled={(date) => date < new Date()}
-                  className="rounded-md border"
+                  className="rounded-md border scale-90 sm:scale-100 origin-center"
                 />
               </div>
             </CardContent>
@@ -169,9 +169,9 @@ export const AppointmentBooking = () => {
 
           {/* Time Selection */}
           <Card>
-            <CardContent className="p-6">
-              <Label className="text-base font-semibold mb-3 block">Select Time Slot</Label>
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+            <CardContent className="p-4 sm:p-6">
+              <Label className="text-sm sm:text-base font-semibold mb-2 sm:mb-3 block">Select Time Slot</Label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3">
                 {timeSlots.map((time) => (
                   <motion.button
                     key={time}
@@ -179,7 +179,7 @@ export const AppointmentBooking = () => {
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setSelectedTime(time)}
                     className={`
-                      px-4 py-2 rounded-lg border-2 font-medium text-sm transition-colors
+                      px-2 sm:px-4 py-2 rounded-lg border-2 font-medium text-xs sm:text-sm transition-colors
                       ${selectedTime === time 
                         ? 'border-primary bg-primary text-white' 
                         : 'border-gray-200 hover:border-gray-300 text-gray-700'
@@ -195,8 +195,8 @@ export const AppointmentBooking = () => {
 
           {/* Additional Notes */}
           <Card>
-            <CardContent className="p-6">
-              <Label htmlFor="notes" className="text-base font-semibold mb-3 block">
+            <CardContent className="p-4 sm:p-6">
+              <Label htmlFor="notes" className="text-sm sm:text-base font-semibold mb-2 sm:mb-3 block">
                 Additional Notes (Optional)
               </Label>
               <Textarea
@@ -204,28 +204,28 @@ export const AppointmentBooking = () => {
                 placeholder="Please describe your symptoms or reason for consultation..."
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                className="min-h-[120px]"
+                className="min-h-[100px] sm:min-h-[120px] text-sm sm:text-base"
               />
             </CardContent>
           </Card>
         </div>
 
         {/* Sidebar - Summary */}
-        <div className="space-y-6">
-          <Card className="sticky top-6">
-            <CardContent className="p-6">
-              <h3 className="font-semibold text-lg mb-4">Booking Summary</h3>
+        <div className="space-y-4 sm:space-y-6">
+          <Card className="lg:sticky lg:top-6">
+            <CardContent className="p-4 sm:p-6">
+              <h3 className="font-semibold text-base sm:text-lg mb-3 sm:mb-4">Booking Summary</h3>
               
-              <div className="space-y-4">
-                <div className="flex items-center gap-3 pb-3 border-b">
-                  <CalendarIcon className="w-5 h-5 text-gray-600" />
-                  <div>
-                    <p className="text-sm text-gray-600">Date</p>
-                    <p className="font-medium">
+              <div className="space-y-3 sm:space-y-4">
+                <div className="flex items-center gap-2 sm:gap-3 pb-2 sm:pb-3 border-b">
+                  <CalendarIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 flex-shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs sm:text-sm text-gray-600">Date</p>
+                    <p className="font-medium text-sm sm:text-base truncate">
                       {selectedDate 
                         ? selectedDate.toLocaleDateString('en-US', { 
-                            weekday: 'long', 
-                            month: 'long', 
+                            weekday: 'short', 
+                            month: 'short', 
                             day: 'numeric',
                             year: 'numeric'
                           })
@@ -234,44 +234,44 @@ export const AppointmentBooking = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 pb-3 border-b">
-                  <Clock className="w-5 h-5 text-gray-600" />
-                  <div>
-                    <p className="text-sm text-gray-600">Time</p>
-                    <p className="font-medium">{selectedTime || 'Select a time'}</p>
+                <div className="flex items-center gap-2 sm:gap-3 pb-2 sm:pb-3 border-b">
+                  <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 flex-shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs sm:text-sm text-gray-600">Time</p>
+                    <p className="font-medium text-sm sm:text-base">{selectedTime || 'Select a time'}</p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 pb-3 border-b">
+                <div className="flex items-center gap-2 sm:gap-3 pb-2 sm:pb-3 border-b">
                   {consultationType === 'video' ? (
-                    <Video className="w-5 h-5 text-gray-600" />
+                    <Video className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 flex-shrink-0" />
                   ) : (
-                    <MapPin className="w-5 h-5 text-gray-600" />
+                    <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 flex-shrink-0" />
                   )}
-                  <div>
-                    <p className="text-sm text-gray-600">Type</p>
-                    <p className="font-medium capitalize">{consultationType} Consultation</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs sm:text-sm text-gray-600">Type</p>
+                    <p className="font-medium text-sm sm:text-base capitalize truncate">{consultationType} Consultation</p>
                   </div>
                 </div>
 
-                <div className="pt-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-gray-600">Consultation Fee</span>
-                    <span className="font-medium">${doctor.consultationFee}</span>
+                <div className="pt-2 sm:pt-3">
+                  <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+                    <span className="text-xs sm:text-sm text-gray-600">Consultation Fee</span>
+                    <span className="font-medium text-sm sm:text-base">${doctor.consultationFee}</span>
                   </div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-gray-600">Platform Fee</span>
-                    <span className="font-medium">$5</span>
+                  <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+                    <span className="text-xs sm:text-sm text-gray-600">Platform Fee</span>
+                    <span className="font-medium text-sm sm:text-base">$5</span>
                   </div>
-                  <div className="flex items-center justify-between pt-3 border-t">
-                    <span className="font-semibold text-lg">Total</span>
-                    <span className="font-bold text-xl text-primary">${doctor.consultationFee + 5}</span>
+                  <div className="flex items-center justify-between pt-2 sm:pt-3 border-t">
+                    <span className="font-semibold text-base sm:text-lg">Total</span>
+                    <span className="font-bold text-lg sm:text-xl text-primary">${doctor.consultationFee + 5}</span>
                   </div>
                 </div>
               </div>
 
               <Button 
-                className="w-full mt-6" 
+                className="w-full mt-4 sm:mt-6 h-10 sm:h-11 text-sm sm:text-base" 
                 size="lg"
                 disabled={!selectedDate || !selectedTime}
                 onClick={handleBookAppointment}
@@ -279,7 +279,7 @@ export const AppointmentBooking = () => {
                 Book Appointment
               </Button>
 
-              <p className="text-xs text-gray-500 text-center mt-3">
+              <p className="text-xs text-gray-500 text-center mt-2 sm:mt-3">
                 You can cancel or reschedule up to 24 hours before your appointment
               </p>
             </CardContent>
@@ -289,50 +289,50 @@ export const AppointmentBooking = () => {
 
       {/* Confirmation Dialog */}
       <Dialog open={showConfirmation} onOpenChange={setShowConfirmation}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="max-w-[95vw] sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                <CheckCircle2 className="w-6 h-6 text-green-600" />
+            <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
               </div>
               Confirm Booking
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <p className="text-gray-600">
+          <div className="space-y-3 sm:space-y-4">
+            <p className="text-sm sm:text-base text-gray-600">
               Please confirm your appointment details:
             </p>
             
-            <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Doctor:</span>
-                <span className="font-medium">{doctor.name}</span>
+            <div className="bg-gray-50 rounded-lg p-3 sm:p-4 space-y-1.5 sm:space-y-2">
+              <div className="flex justify-between items-start gap-2">
+                <span className="text-xs sm:text-sm text-gray-600">Doctor:</span>
+                <span className="font-medium text-xs sm:text-sm text-right">{doctor.name}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Date:</span>
-                <span className="font-medium">
+              <div className="flex justify-between items-start gap-2">
+                <span className="text-xs sm:text-sm text-gray-600">Date:</span>
+                <span className="font-medium text-xs sm:text-sm text-right">
                   {selectedDate?.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                 </span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Time:</span>
-                <span className="font-medium">{selectedTime}</span>
+              <div className="flex justify-between items-start gap-2">
+                <span className="text-xs sm:text-sm text-gray-600">Time:</span>
+                <span className="font-medium text-xs sm:text-sm">{selectedTime}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Type:</span>
-                <span className="font-medium capitalize">{consultationType}</span>
+              <div className="flex justify-between items-start gap-2">
+                <span className="text-xs sm:text-sm text-gray-600">Type:</span>
+                <span className="font-medium text-xs sm:text-sm capitalize">{consultationType}</span>
               </div>
-              <div className="flex justify-between pt-2 border-t">
-                <span className="text-gray-600">Total:</span>
-                <span className="font-bold text-primary">${doctor.consultationFee + 5}</span>
+              <div className="flex justify-between items-start gap-2 pt-1.5 sm:pt-2 border-t">
+                <span className="text-xs sm:text-sm text-gray-600">Total:</span>
+                <span className="font-bold text-sm sm:text-base text-primary">${doctor.consultationFee + 5}</span>
               </div>
             </div>
 
-            <div className="flex gap-3">
-              <Button variant="outline" className="flex-1" onClick={() => setShowConfirmation(false)}>
+            <div className="flex gap-2 sm:gap-3">
+              <Button variant="outline" className="flex-1 h-9 sm:h-10 text-xs sm:text-sm" onClick={() => setShowConfirmation(false)}>
                 Cancel
               </Button>
-              <Button className="flex-1" onClick={handleConfirmBooking}>
+              <Button className="flex-1 h-9 sm:h-10 text-xs sm:text-sm" onClick={handleConfirmBooking}>
                 Confirm & Pay
               </Button>
             </div>

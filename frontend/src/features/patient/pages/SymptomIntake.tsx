@@ -61,47 +61,47 @@ export const SymptomIntake = () => {
   };
 
   return (
-    <div className=" mx-auto space-y-6">
+    <div className="mx-auto space-y-4 sm:space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">AI Symptom Check</h1>
-        <p className="text-gray-600">Describe your symptoms and let our AI help you understand what might be wrong</p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1.5 sm:mb-2">AI Symptom Check</h1>
+        <p className="text-sm sm:text-base text-gray-600">Describe your symptoms and let our AI help you understand what might be wrong</p>
       </div>
 
       {/* Progress Steps */}
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-semibold">
+      <div className="flex items-center gap-2 sm:gap-4 overflow-x-auto pb-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary text-white flex items-center justify-center font-semibold text-sm">
             1
           </div>
-          <span className="font-medium text-gray-900">Describe Symptoms</span>
+          <span className="font-medium text-gray-900 text-xs sm:text-base whitespace-nowrap">Describe Symptoms</span>
         </div>
-        <div className="flex-1 h-0.5 bg-gray-200" />
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center font-semibold">
+        <div className="flex-1 min-w-[20px] h-0.5 bg-gray-200" />
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center font-semibold text-sm">
             2
           </div>
-          <span className="text-gray-500">AI Analysis</span>
+          <span className="text-gray-500 text-xs sm:text-base whitespace-nowrap">AI Analysis</span>
         </div>
-        <div className="flex-1 h-0.5 bg-gray-200" />
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center font-semibold">
+        <div className="flex-1 min-w-[20px] h-0.5 bg-gray-200" />
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center font-semibold text-sm">
             3
           </div>
-          <span className="text-gray-500">Pre-Diagnosis</span>
+          <span className="text-gray-500 text-xs sm:text-base whitespace-nowrap">Pre-Diagnosis</span>
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Main Form */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-4 sm:space-y-6">
           {/* Text Description */}
           <Card>
-            <CardContent className="p-6">
-              <div className="space-y-4">
+            <CardContent className="p-4 sm:p-6">
+              <div className="space-y-3 sm:space-y-4">
                 <div>
-                  <Label htmlFor="description" className="text-base font-semibold">Describe Your Symptoms</Label>
-                  <p className="text-sm text-gray-600 mt-1">Tell us what you're experiencing in detail</p>
+                  <Label htmlFor="description" className="text-sm sm:text-base font-semibold">Describe Your Symptoms</Label>
+                  <p className="text-xs sm:text-sm text-gray-600 mt-1">Tell us what you're experiencing in detail</p>
                 </div>
                 <div className="relative">
                   <Textarea
@@ -109,15 +109,15 @@ export const SymptomIntake = () => {
                     placeholder="E.g., I've been having a persistent headache for the past 2 days, accompanied by mild fever..."
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    className="min-h-[150px] pr-12"
+                    className="min-h-[120px] sm:min-h-[150px] pr-12 text-sm sm:text-base"
                   />
                   <Button
                     size="icon"
                     variant={isRecording ? 'destructive' : 'outline'}
-                    className={`absolute bottom-3 right-3 ${isRecording ? 'animate-pulse' : ''}`}
+                    className={`absolute bottom-2 sm:bottom-3 right-2 sm:right-3 h-8 w-8 sm:h-9 sm:w-9 ${isRecording ? 'animate-pulse' : ''}`}
                     onClick={handleVoiceInput}
                   >
-                    {isRecording ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mic className="w-4 h-4" />}
+                    {isRecording ? <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin" /> : <Mic className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
                   </Button>
                 </div>
                 {isRecording && (
@@ -136,18 +136,18 @@ export const SymptomIntake = () => {
 
           {/* Quick Select Symptoms */}
           <Card>
-            <CardContent className="p-6">
-              <div className="space-y-4">
+            <CardContent className="p-4 sm:p-6">
+              <div className="space-y-3 sm:space-y-4">
                 <div>
-                  <Label className="text-base font-semibold">Quick Select Common Symptoms</Label>
-                  <p className="text-sm text-gray-600 mt-1">Click to add common symptoms</p>
+                  <Label className="text-sm sm:text-base font-semibold">Quick Select Common Symptoms</Label>
+                  <p className="text-xs sm:text-sm text-gray-600 mt-1">Click to add common symptoms</p>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1.5 sm:gap-2">
                   {commonSymptoms.map((symptom) => (
                     <Badge
                       key={symptom}
                       variant={selectedSymptoms.includes(symptom) ? 'default' : 'outline'}
-                      className="cursor-pointer px-4 py-2 text-sm"
+                      className="cursor-pointer px-2.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm"
                       onClick={() => toggleSymptom(symptom)}
                     >
                       {selectedSymptoms.includes(symptom) && (

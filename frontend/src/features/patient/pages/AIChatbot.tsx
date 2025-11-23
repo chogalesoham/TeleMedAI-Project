@@ -103,34 +103,35 @@ export const AIChatbot = () => {
   };
 
   return (
-    <div className="h-[calc(100vh-8rem)] flex flex-col space-y-4">
+    <div className="h-[calc(100vh-8rem)] flex flex-col space-y-3 sm:space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-blue-600 flex items-center justify-center">
-            <Bot className="w-6 h-6 text-white" />
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-primary to-blue-600 flex items-center justify-center flex-shrink-0">
+            <Bot className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
           </div>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">AI Health Assistant</h1>
-            <div className="flex items-center gap-2 mt-1">
-              <div className="w-2 h-2 rounded-full bg-green-600 animate-pulse" />
-              <span className="text-sm text-gray-600">Online & Ready to Help</span>
+          <div className="min-w-0">
+            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 truncate">AI Health Assistant</h1>
+            <div className="flex items-center gap-1.5 sm:gap-2 mt-0.5 sm:mt-1">
+              <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-green-600 animate-pulse flex-shrink-0" />
+              <span className="text-xs sm:text-sm text-gray-600">Online & Ready</span>
             </div>
           </div>
         </div>
-        <Badge variant="secondary" className="flex items-center gap-1">
-          <Sparkles className="w-3 h-3" />
-          AI Powered
+        <Badge variant="secondary" className="flex items-center gap-1 flex-shrink-0 text-[10px] sm:text-xs px-2 sm:px-2.5 py-0.5 sm:py-1">
+          <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+          <span className="hidden xs:inline">AI Powered</span>
+          <span className="xs:hidden">AI</span>
         </Badge>
       </div>
 
-      <div className="flex-1 grid lg:grid-cols-4 gap-4 min-h-0">
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-3 sm:gap-4 min-h-0">
         {/* Chat Area */}
         <div className="lg:col-span-3 flex flex-col min-h-0">
           <Card className="flex-1 flex flex-col min-h-0">
-            <CardContent className="p-4 flex flex-col flex-1 min-h-0">
+            <CardContent className="p-3 sm:p-4 flex flex-col flex-1 min-h-0">
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2">
+              <div className="flex-1 overflow-y-auto space-y-3 sm:space-y-4 mb-3 sm:mb-4 pr-1 sm:pr-2">
                 <AnimatePresence>
                   {messages.map((message, index) => (
                     <motion.div
@@ -139,16 +140,16 @@ export const AIChatbot = () => {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
                       transition={{ delay: index * 0.05 }}
-                      className={`flex gap-3 ${message.role === 'user' ? 'flex-row-reverse' : ''}`}
+                      className={`flex gap-2 sm:gap-3 ${message.role === 'user' ? 'flex-row-reverse' : ''}`}
                     >
                       {/* Avatar */}
-                      <Avatar className={`w-8 h-8 flex-shrink-0 ${
+                      <Avatar className={`w-7 h-7 sm:w-8 sm:h-8 flex-shrink-0 ${
                         message.role === 'assistant' 
                           ? 'bg-gradient-to-br from-primary to-blue-600' 
                           : 'bg-gray-600'
                       }`}>
                         <AvatarFallback className="text-white">
-                          {message.role === 'assistant' ? <Bot className="w-4 h-4" /> : <User className="w-4 h-4" />}
+                          {message.role === 'assistant' ? <Bot className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <User className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
                         </AvatarFallback>
                       </Avatar>
 
@@ -156,20 +157,20 @@ export const AIChatbot = () => {
                       <div className={`flex-1 ${message.role === 'user' ? 'flex justify-end' : ''}`}>
                         <div
                           className={`
-                            inline-block px-4 py-3 rounded-2xl max-w-[80%]
+                            inline-block px-3 py-2 sm:px-4 sm:py-3 rounded-2xl max-w-[85%] sm:max-w-[80%]
                             ${message.role === 'user' 
                               ? 'bg-primary text-white rounded-tr-none' 
                               : 'bg-gray-100 text-gray-900 rounded-tl-none'
                             }
                           `}
                         >
-                          <p className="text-sm whitespace-pre-wrap leading-relaxed">
+                          <p className="text-xs sm:text-sm whitespace-pre-wrap leading-relaxed">
                             {message.content}
                           </p>
-                          <div className={`flex items-center gap-1 mt-2 text-xs ${
+                          <div className={`flex items-center gap-1 mt-1.5 sm:mt-2 text-[10px] sm:text-xs ${
                             message.role === 'user' ? 'text-white/70' : 'text-gray-500'
                           }`}>
-                            <Clock className="w-3 h-3" />
+                            <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                             <span>
                               {message.timestamp.toLocaleTimeString('en-US', { 
                                 hour: 'numeric', 
@@ -188,18 +189,18 @@ export const AIChatbot = () => {
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="flex gap-3"
+                    className="flex gap-2 sm:gap-3"
                   >
-                    <Avatar className="w-8 h-8 bg-gradient-to-br from-primary to-blue-600">
+                    <Avatar className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-primary to-blue-600">
                       <AvatarFallback className="text-white">
-                        <Bot className="w-4 h-4" />
+                        <Bot className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                       </AvatarFallback>
                     </Avatar>
-                    <div className="bg-gray-100 px-4 py-3 rounded-2xl rounded-tl-none">
+                    <div className="bg-gray-100 px-3 py-2 sm:px-4 sm:py-3 rounded-2xl rounded-tl-none">
                       <div className="flex gap-1">
-                        <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" />
-                        <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '0.2s' }} />
-                        <div className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '0.4s' }} />
+                        <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-gray-400 animate-bounce" />
+                        <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '0.2s' }} />
+                        <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '0.4s' }} />
                       </div>
                     </div>
                   </motion.div>
@@ -215,18 +216,19 @@ export const AIChatbot = () => {
                   onChange={(e) => setInput(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                   placeholder="Type your health question..."
-                  className="flex-1"
+                  className="flex-1 h-9 sm:h-10 text-sm"
                   disabled={isTyping}
                 />
                 <Button 
                   onClick={() => handleSendMessage()} 
                   disabled={!input.trim() || isTyping}
                   size="icon"
+                  className="h-9 w-9 sm:h-10 sm:w-10 flex-shrink-0"
                 >
                   {isTyping ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin" />
                   ) : (
-                    <Send className="w-4 h-4" />
+                    <Send className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   )}
                 </Button>
               </div>
@@ -235,15 +237,15 @@ export const AIChatbot = () => {
         </div>
 
         {/* Sidebar */}
-        <div className="space-y-4 overflow-y-auto">
+        <div className="space-y-3 sm:space-y-4 overflow-y-auto">
           {/* Suggested Queries */}
           <Card>
-            <CardContent className="p-4">
-              <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                <MessageSquare className="w-4 h-4" />
+            <CardContent className="p-3 sm:p-4">
+              <h3 className="font-semibold text-sm sm:text-base text-gray-900 mb-2 sm:mb-3 flex items-center gap-1.5 sm:gap-2">
+                <MessageSquare className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 Quick Questions
               </h3>
-              <div className="space-y-2">
+              <div className="space-y-1.5 sm:space-y-2">
                 {suggestedQueries.map((query, index) => (
                   <motion.button
                     key={index}
@@ -251,7 +253,7 @@ export const AIChatbot = () => {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.1 }}
                     onClick={() => handleSuggestedQuery(query)}
-                    className="w-full text-left p-3 text-sm bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+                    className="w-full text-left p-2 sm:p-3 text-xs sm:text-sm bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
                     disabled={isTyping}
                   >
                     {query}
@@ -263,12 +265,12 @@ export const AIChatbot = () => {
 
           {/* Info Card */}
           <Card className="bg-blue-50 border-blue-200">
-            <CardContent className="p-4">
-              <div className="flex items-start gap-2">
-                <Sparkles className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-start gap-1.5 sm:gap-2">
+                <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 flex-shrink-0 mt-0.5" />
                 <div>
-                  <h3 className="font-semibold text-blue-900 text-sm mb-1">AI Assistant Info</h3>
-                  <p className="text-xs text-blue-800 leading-relaxed">
+                  <h3 className="font-semibold text-blue-900 text-xs sm:text-sm mb-1">AI Assistant Info</h3>
+                  <p className="text-[10px] sm:text-xs text-blue-800 leading-relaxed">
                     This AI assistant provides general health information based on your records. 
                     For medical emergencies or specific diagnoses, always consult a healthcare professional.
                   </p>
@@ -279,9 +281,9 @@ export const AIChatbot = () => {
 
           {/* Privacy Notice */}
           <Card>
-            <CardContent className="p-4">
-              <h3 className="font-semibold text-gray-900 text-sm mb-2">🔒 Privacy & Security</h3>
-              <ul className="space-y-1 text-xs text-gray-600">
+            <CardContent className="p-3 sm:p-4">
+              <h3 className="font-semibold text-gray-900 text-xs sm:text-sm mb-1.5 sm:mb-2">🔒 Privacy & Security</h3>
+              <ul className="space-y-0.5 sm:space-y-1 text-[10px] sm:text-xs text-gray-600">
                 <li>• End-to-end encrypted</li>
                 <li>• HIPAA compliant</li>
                 <li>• Conversations are private</li>

@@ -31,6 +31,12 @@ import {
   Clock,
   ChevronLeft,
   ChevronRight,
+  ClipboardCheck,
+  Pill,
+  Upload,
+  FileHeart,
+  Apple,
+  Sparkles,
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { mockUserProfile } from '../data/mockData';
@@ -49,14 +55,14 @@ const navigation: NavItem[] = [
   { name: 'Book Appointment', path: '/patient-dashboard/appointment-booking', icon: Calendar },
   { name: 'Waiting Room', path: '/patient-dashboard/waiting-room', icon: Clock },
   { name: 'Live Consultation', path: '/patient-dashboard/live-consultation', icon: Video },
-  { name: 'Consultation Summary', path: '/patient-dashboard/consultation-summary', icon: FileText },
-  { name: 'Medications', path: '/patient-dashboard/medications', icon: FileText },
-  { name: 'Report Upload', path: '/patient-dashboard/report-upload', icon: FileText },
-  { name: 'Medical History', path: '/patient-dashboard/medical-history', icon: FileText },
+  { name: 'Consultation Summary', path: '/patient-dashboard/consultation-summary', icon: ClipboardCheck },
+  { name: 'Medications', path: '/patient-dashboard/medications', icon: Pill },
+  { name: 'Report Upload', path: '/patient-dashboard/report-upload', icon: Upload },
+  { name: 'Medical History', path: '/patient-dashboard/medical-history', icon: FileHeart },
   { name: 'AI Chatbot', path: '/patient-dashboard/ai-chatbot', icon: Bot },
-  { name: 'Diet & Lifestyle', path: '/patient-dashboard/diet-lifestyle', icon: Activity },
+  { name: 'Diet & Lifestyle', path: '/patient-dashboard/diet-lifestyle', icon: Apple },
   { name: 'Nearby Clinics', path: '/patient-dashboard/nearby-clinics', icon: MapPin },
-  { name: 'Specialists', path: '/patient-dashboard/specialist-recommendation', icon: Stethoscope },
+  { name: 'Specialists', path: '/patient-dashboard/specialist-recommendation', icon: Sparkles },
 ];
 
 const PatientDashboardLayout = () => {
@@ -70,49 +76,49 @@ const PatientDashboardLayout = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200 shadow-sm">
-        <div className="flex items-center justify-between h-16 px-4 lg:px-6">
+        <div className="flex items-center justify-between h-14 sm:h-16 px-3 sm:px-4 lg:px-6">
           {/* Logo & Mobile Menu */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             <Button
               variant="ghost"
               size="icon"
-              className="lg:hidden"
+              className="lg:hidden h-9 w-9"
               onClick={() => setSidebarOpen(!sidebarOpen)}
             >
               {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
 
-            <Link to="/patient-dashboard" className="flex items-center gap-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                <Activity className="h-6 w-6 text-white" />
+            <Link to="/patient-dashboard" className="flex items-center gap-1.5 sm:gap-2">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                <Activity className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
               </div>
-              <span className="text-xl font-bold text-gray-900 hidden sm:block">TeleMed</span>
+              <span className="text-lg sm:text-xl font-bold text-gray-900 hidden sm:block">TeleMed</span>
             </Link>
           </div>
 
           {/* Right Side Actions */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-3">
             {/* Notifications */}
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell className="h-5 w-5" />
+            <Button variant="ghost" size="icon" className="relative h-9 w-9">
+              <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
               <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
             </Button>
 
             {/* User Menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex items-center gap-2 px-2">
-                  <Avatar className="h-8 w-8">
+                <Button variant="ghost" className="flex items-center gap-1.5 sm:gap-2 px-1.5 sm:px-2 h-9 sm:h-10">
+                  <Avatar className="h-7 w-7 sm:h-8 sm:w-8">
                     <AvatarImage src={mockUserProfile.avatar} alt={mockUserProfile.name} />
-                    <AvatarFallback>
+                    <AvatarFallback className="text-xs sm:text-sm">
                       {mockUserProfile.name
                         .split(' ')
                         .map((n) => n[0])
                         .join('')}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="hidden sm:block text-sm font-medium">{mockUserProfile.name}</span>
-                  <ChevronDown className="h-4 w-4 text-gray-500" />
+                  <span className="hidden md:block text-xs sm:text-sm font-medium max-w-[100px] truncate">{mockUserProfile.name}</span>
+                  <ChevronDown className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 hidden sm:block" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
@@ -173,12 +179,12 @@ const PatientDashboardLayout = () => {
       {/* Sidebar */}
       <aside
         className={`
-          fixed top-16 left-0 bottom-0 bg-white border-r border-gray-200 z-40 
+          fixed top-14 sm:top-16 left-0 bottom-0 bg-white border-r border-gray-200 z-40 
           transition-all duration-300 ease-in-out overflow-y-auto
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
           lg:translate-x-0
           ${sidebarCollapsed ? 'lg:w-20' : 'lg:w-64'}
-          w-64
+          w-64 sm:w-72
         `}
       >
         {/* Sidebar Header with Branding */}
@@ -251,11 +257,11 @@ const PatientDashboardLayout = () => {
       {/* Main Content */}
       <main 
         className={`
-          pt-16 min-h-screen transition-all duration-300 ease-in-out
+          pt-14 sm:pt-16 min-h-screen transition-all duration-300 ease-in-out
           ${sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'}
         `}
       >
-        <div className="p-6">
+        <div className="p-3 sm:p-4 md:p-6 max-w-[100vw] overflow-x-hidden">
           <Outlet />
         </div>
       </main>

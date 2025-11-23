@@ -34,21 +34,21 @@ export const StatsCard = ({
       transition={{ duration: 0.3 }}
       whileHover={{ y: -4, transition: { duration: 0.2 } }}
     >
-      <Card className="p-6 hover:shadow-lg transition-shadow">
-        <div className="flex items-center justify-between">
-          <div className="flex-1">
-            <p className="text-sm font-medium text-gray-600 mb-1">{title}</p>
-            <div className="flex items-baseline gap-2">
-              <h3 className="text-3xl font-bold text-gray-900">{value}</h3>
+      <Card className="p-4 sm:p-5 md:p-6 hover:shadow-lg transition-shadow">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <p className="text-xs sm:text-sm font-medium text-gray-600 mb-0.5 sm:mb-1 truncate">{title}</p>
+            <div className="flex items-baseline gap-1.5 sm:gap-2 flex-wrap">
+              <h3 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">{value}</h3>
               {change && (
-                <span className={`text-sm font-medium ${changeColors[changeType]}`}>
+                <span className={`text-xs sm:text-sm font-medium ${changeColors[changeType]}`}>
                   {change}
                 </span>
               )}
             </div>
           </div>
-          <div className={`w-12 h-12 rounded-xl ${iconBg} flex items-center justify-center`}>
-            <Icon className={`w-6 h-6 ${iconColor}`} />
+          <div className={`w-10 h-10 sm:w-11 sm:h-11 md:w-12 md:h-12 flex-shrink-0 rounded-xl ${iconBg} flex items-center justify-center`}>
+            <Icon className={`w-5 h-5 sm:w-6 sm:h-6 ${iconColor}`} />
           </div>
         </div>
       </Card>
