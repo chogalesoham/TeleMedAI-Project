@@ -151,7 +151,7 @@ export const DoctorSelection = () => {
             transition={{ delay: index * 0.1 }}
             whileHover={{ y: -4 }}
           >
-            <Card className="h-full hover:shadow-lg transition-shadow">
+            <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate(`/patient-dashboard/doctor/${doctor.id}`)}>
               <CardContent className="p-4 sm:p-6">
                 {/* Doctor Header */}
                 <div className="flex items-start gap-3 sm:gap-4 mb-3 sm:mb-4">
@@ -209,15 +209,14 @@ export const DoctorSelection = () => {
                   )}
                 </div>
 
-                {/* Price & Book Button */}
+                {/* Price & View Profile Button */}
                 <div className="flex items-center justify-between pt-4 border-t">
                   <div>
                     <p className="text-xs text-gray-600">Consultation Fee</p>
                     <p className="text-xl font-bold text-primary">${doctor.consultationFee}</p>
                   </div>
-                  <Button onClick={() => navigate(`/patient-dashboard/book-appointment?doctorId=${doctor.id}`)}>
-                    <Calendar className="w-4 h-4 mr-2" />
-                    Book
+                  <Button onClick={() => navigate(`/patient-dashboard/doctor/${doctor.id}`)}>
+                    View Profile
                   </Button>
                 </div>
               </CardContent>

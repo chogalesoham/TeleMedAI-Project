@@ -1,435 +1,522 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
-  FileText, 
-  Calendar, 
-  User, 
-  Download, 
-  Eye, 
-  Filter,
-  Search,
+  Calendar,
+  Clock,
+  Video,
+  MapPin,
   ChevronRight,
   Stethoscope,
-  Pill,
-  Activity,
-  Image as ImageIcon
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  Search,
+  CalendarDays,
+  FileText,
+  History,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { mockMedicalRecords } from '../data/mockData';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useNavigate } from 'react-router-dom';
 
-export const MedicalHistory = () => {
+// Mock consultation data
+interface Consultation {
+  id: string;
+  doctorName: string;
+  doctorSpecialization: string;
+  doctorImage: string;
+  date: string;
+  time: string;
+  type: 'video' | 'in-person';
+  status: 'completed' | 'upcoming' | 'cancelled';
+  notes?: string;
+  diagnosis?: string;
+  duration?: string;
+}
+
+const mockConsultations: Consultation[] = [
+  // Future Meetings
+  {
+    id: 'f1',
+    doctorName: 'Dr. Sarah Johnson',
+    doctorSpecialization: 'Cardiologist',
+    doctorImage: '/doctors/sarah.jpg',
+    date: '2025-11-28',
+    time: '10:00 AM',
+    type: 'video',
+    status: 'upcoming',
+    notes: 'Follow-up consultation for blood pressure monitoring',
+  },
+  {
+    id: 'f2',
+    doctorName: 'Dr. Michael Chen',
+    doctorSpecialization: 'General Physician',
+    doctorImage: '/doctors/michael.jpg',
+    date: '2025-12-05',
+    time: '02:30 PM',
+    type: 'in-person',
+    status: 'upcoming',
+    notes: 'Annual health checkup',
+  },
+  {
+    id: 'f3',
+    doctorName: 'Dr. Emily Rodriguez',
+    doctorSpecialization: 'Dermatologist',
+    doctorImage: '/doctors/emily.jpg',
+    date: '2025-12-10',
+    time: '11:00 AM',
+    type: 'video',
+    status: 'upcoming',
+    notes: 'Skin condition follow-up',
+  },
+  // Past Meetings
+  {
+    id: 'p1',
+    doctorName: 'Dr. Sarah Johnson',
+    doctorSpecialization: 'Cardiologist',
+    doctorImage: '/doctors/sarah.jpg',
+    date: '2024-11-15',
+    time: '03:00 PM',
+    type: 'video',
+    status: 'completed',
+    notes: 'Discussed chest pain symptoms and prescribed medication',
+    diagnosis: 'Mild hypertension',
+    duration: '25 mins',
+  },
+  {
+    id: 'p2',
+    doctorName: 'Dr. Michael Chen',
+    doctorSpecialization: 'General Physician',
+    doctorImage: '/doctors/michael.jpg',
+    date: '2024-11-10',
+    time: '10:30 AM',
+    type: 'in-person',
+    status: 'completed',
+    notes: 'Routine checkup, all vitals normal',
+    diagnosis: 'Healthy',
+    duration: '30 mins',
+  },
+  {
+    id: 'p3',
+    doctorName: 'Dr. Emily Rodriguez',
+    doctorSpecialization: 'Dermatologist',
+    doctorImage: '/doctors/emily.jpg',
+    date: '2024-10-28',
+    time: '02:00 PM',
+    type: 'video',
+    status: 'completed',
+    notes: 'Skin allergy treatment prescribed',
+    diagnosis: 'Contact dermatitis',
+    duration: '20 mins',
+  },
+  {
+    id: 'p4',
+    doctorName: 'Dr. James Wilson',
+    doctorSpecialization: 'Neurologist',
+    doctorImage: '/doctors/james.jpg',
+    date: '2024-10-15',
+    time: '09:00 AM',
+    type: 'in-person',
+    status: 'completed',
+    notes: 'Headache consultation, recommended lifestyle changes',
+    diagnosis: 'Tension headaches',
+    duration: '35 mins',
+  },
+  {
+    id: 'p5',
+    doctorName: 'Dr. Lisa Anderson',
+    doctorSpecialization: 'Pediatrician',
+    doctorImage: '/doctors/lisa.jpg',
+    date: '2024-09-20',
+    time: '11:30 AM',
+    type: 'video',
+    status: 'cancelled',
+    notes: 'Patient cancelled due to travel',
+  },
+  {
+    id: 'p6',
+    doctorName: 'Dr. Robert Taylor',
+    doctorSpecialization: 'Orthopedic Surgeon',
+    doctorImage: '/doctors/robert.jpg',
+    date: '2024-09-05',
+    time: '04:00 PM',
+    type: 'in-person',
+    status: 'completed',
+    notes: 'Knee pain evaluation, physiotherapy recommended',
+    diagnosis: 'Mild arthritis',
+    duration: '40 mins',
+  },
+];
+
+const MedicalHistory = () => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedType, setSelectedType] = useState('all');
-  const [selectedRecord, setSelectedRecord] = useState<typeof mockMedicalRecords[0] | null>(null);
-  const [showDetails, setShowDetails] = useState(false);
+  const [selectedTab, setSelectedTab] = useState('all');
 
-  const recordTypes = [
-    { value: 'all', label: 'All Records', icon: FileText },
-    { value: 'consultation', label: 'Consultations', icon: Stethoscope },
-    { value: 'lab-report', label: 'Lab Reports', icon: Activity },
-    { value: 'prescription', label: 'Prescriptions', icon: Pill },
-    { value: 'imaging', label: 'Imaging', icon: ImageIcon },
-  ];
+  // Separate consultations into future and past
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
-  const filteredRecords = mockMedicalRecords.filter(record => {
-    const matchesSearch = record.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         record.doctorName?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesType = selectedType === 'all' || record.type === selectedType;
-    return matchesSearch && matchesType;
-  });
+  const futureConsultations = mockConsultations
+    .filter(c => new Date(c.date) >= today && c.status === 'upcoming')
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case 'consultation':
-        return Stethoscope;
-      case 'lab-report':
-        return Activity;
-      case 'prescription':
-        return Pill;
-      case 'imaging':
-        return ImageIcon;
+  const pastConsultations = mockConsultations
+    .filter(c => new Date(c.date) < today || c.status !== 'upcoming')
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  // Filter based on search
+  const filterConsultations = (consultations: Consultation[]) => {
+    return consultations.filter(c =>
+      c.doctorName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      c.doctorSpecialization.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      c.notes?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  };
+
+  const filteredFuture = filterConsultations(futureConsultations);
+  const filteredPast = filterConsultations(pastConsultations);
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return 'bg-green-100 text-green-700 border-green-200';
+      case 'upcoming':
+        return 'bg-blue-100 text-blue-700 border-blue-200';
+      case 'cancelled':
+        return 'bg-red-100 text-red-700 border-red-200';
       default:
-        return FileText;
+        return 'bg-gray-100 text-gray-700 border-gray-200';
     }
   };
 
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case 'consultation':
-        return 'bg-blue-100 text-blue-700';
-      case 'lab-report':
-        return 'bg-green-100 text-green-700';
-      case 'prescription':
-        return 'bg-purple-100 text-purple-700';
-      case 'imaging':
-        return 'bg-orange-100 text-orange-700';
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return <CheckCircle className="w-4 h-4" />;
+      case 'upcoming':
+        return <AlertCircle className="w-4 h-4" />;
+      case 'cancelled':
+        return <XCircle className="w-4 h-4" />;
       default:
-        return 'bg-gray-100 text-gray-700';
+        return null;
     }
   };
 
-  const viewRecordDetails = (record: typeof mockMedicalRecords[0]) => {
-    setSelectedRecord(record);
-    setShowDetails(true);
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
   };
+
+  const handleConsultationClick = (consultation: Consultation) => {
+    // Navigate to consultation summary page
+    navigate('/patient-dashboard/consultation-summary', {
+      state: { consultation },
+    });
+  };
+
+  const ConsultationCard = ({ consultation }: { consultation: Consultation }) => (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ scale: 1.01 }}
+      transition={{ duration: 0.2 }}
+    >
+      <Card
+        className="cursor-pointer hover:shadow-lg transition-all duration-200 border-2 hover:border-primary"
+        onClick={() => handleConsultationClick(consultation)}
+      >
+        <CardContent className="p-4 sm:p-5">
+          <div className="flex gap-4">
+            {/* Doctor Avatar */}
+            <Avatar className="w-14 h-14 sm:w-16 sm:h-16 flex-shrink-0">
+              <AvatarImage src={consultation.doctorImage} />
+              <AvatarFallback>
+                {consultation.doctorName[4]}
+                {consultation.doctorName.split(' ')[1]?.[0]}
+              </AvatarFallback>
+            </Avatar>
+
+            {/* Consultation Details */}
+            <div className="flex-1 min-w-0">
+              {/* Doctor Info */}
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-base sm:text-lg text-gray-900 truncate">
+                    {consultation.doctorName}
+                  </h3>
+                  <p className="text-sm text-gray-600 flex items-center gap-1">
+                    <Stethoscope className="w-3.5 h-3.5" />
+                    {consultation.doctorSpecialization}
+                  </p>
+                </div>
+                <Badge
+                  variant="outline"
+                  className={`${getStatusColor(consultation.status)} flex items-center gap-1 text-xs font-medium`}
+                >
+                  {getStatusIcon(consultation.status)}
+                  {consultation.status.charAt(0).toUpperCase() + consultation.status.slice(1)}
+                </Badge>
+              </div>
+
+              {/* Date, Time, Type */}
+              <div className="flex flex-wrap gap-3 sm:gap-4 mb-3 text-sm text-gray-600">
+                <div className="flex items-center gap-1.5">
+                  <Calendar className="w-4 h-4" />
+                  <span>{formatDate(consultation.date)}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Clock className="w-4 h-4" />
+                  <span>{consultation.time}</span>
+                </div>
+                <Badge variant="secondary" className="flex items-center gap-1 text-xs">
+                  {consultation.type === 'video' ? (
+                    <>
+                      <Video className="w-3 h-3" />
+                      Video Call
+                    </>
+                  ) : (
+                    <>
+                      <MapPin className="w-3 h-3" />
+                      In-Person
+                    </>
+                  )}
+                </Badge>
+                {consultation.duration && (
+                  <div className="flex items-center gap-1.5 text-gray-500">
+                    <Clock className="w-3.5 h-3.5" />
+                    <span className="text-xs">{consultation.duration}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Notes/Diagnosis */}
+              {consultation.notes && (
+                <p className="text-sm text-gray-700 line-clamp-2 mb-2">
+                  <span className="font-medium">Notes:</span> {consultation.notes}
+                </p>
+              )}
+              {consultation.diagnosis && (
+                <p className="text-sm text-primary font-medium">
+                  Diagnosis: {consultation.diagnosis}
+                </p>
+              )}
+
+              {/* View Details Arrow */}
+              <div className="flex items-center justify-end mt-3 text-primary">
+                <span className="text-sm font-medium mr-1">View Details</span>
+                <ChevronRight className="w-4 h-4" />
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
 
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-2">Medical History</h1>
-        <p className="text-sm sm:text-base text-gray-600">View and manage your complete medical records timeline</p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+          My Consultations
+        </h1>
+        <p className="text-sm sm:text-base text-gray-600">
+          View all your past and upcoming doctor consultations
+        </p>
       </div>
 
-      {/* Search & Filters */}
+      {/* Search Bar */}
       <Card>
-        <CardContent className="p-4 sm:p-5 md:p-6">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-            {/* Search */}
-            <div className="sm:col-span-2 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 sm:w-4 sm:h-4 text-gray-400" />
-              <Input
-                placeholder="Search records, doctors, diagnoses..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 sm:pl-10 h-9 sm:h-10 text-sm"
-              />
-            </div>
-
-            {/* Type Filter */}
-            <Select value={selectedType} onValueChange={setSelectedType}>
-              <SelectTrigger className="h-9 sm:h-10 text-sm">
-                <Filter className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
-                <SelectValue placeholder="Filter by type" />
-              </SelectTrigger>
-              <SelectContent>
-                {recordTypes.map((type) => (
-                  <SelectItem key={type.value} value={type.value}>
-                    <div className="flex items-center gap-2">
-                      <type.icon className="w-3 h-3 sm:w-4 sm:h-4" />
-                      <span className="text-sm">{type.label}</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        <CardContent className="p-4 sm:p-5">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Input
+              placeholder="Search by doctor name, specialization, or notes..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 h-10 text-sm"
+            />
           </div>
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-        {/* Timeline */}
-        <div className="lg:col-span-2">
-          <Tabs defaultValue="timeline" className="space-y-4">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="timeline" className="text-xs sm:text-sm">
-                <Calendar className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                <span className="hidden xs:inline">Timeline View</span>
-                <span className="xs:hidden">Timeline</span>
-              </TabsTrigger>
-              <TabsTrigger value="list" className="text-xs sm:text-sm">
-                <FileText className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                <span className="hidden xs:inline">List View</span>
-                <span className="xs:hidden">List</span>
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="timeline" className="space-y-4 sm:space-y-6">
-              {/* Timeline by Year */}
-              {[2024, 2023].map((year) => {
-                const yearRecords = filteredRecords.filter(
-                  r => new Date(r.date).getFullYear() === year
-                );
-
-                if (yearRecords.length === 0) return null;
-
-                return (
-                  <div key={year}>
-                    <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-                      <Badge variant="secondary" className="text-base sm:text-lg px-3 sm:px-4 py-0.5 sm:py-1">{year}</Badge>
-                      <div className="flex-1 h-px bg-gray-200" />
-                    </div>
-
-                    <div className="space-y-3 sm:space-y-4">
-                      {yearRecords.map((record, index) => {
-                        const TypeIcon = getTypeIcon(record.type);
-                        return (
-                          <motion.div
-                            key={record.id}
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: index * 0.05 }}
-                            className="relative"
-                          >
-                            {/* Timeline Line */}
-                            {index < yearRecords.length - 1 && (
-                              <div className="absolute left-4 sm:left-6 top-12 sm:top-16 bottom-0 w-0.5 bg-gray-200 -mb-3 sm:-mb-4" />
-                            )}
-
-                            {/* Record Card */}
-                            <div className="flex gap-2 sm:gap-3 md:gap-4">
-                              {/* Date Badge */}
-                              <div className="flex-shrink-0 w-10 sm:w-12 text-center">
-                                <div className="text-xl sm:text-2xl font-bold text-gray-900">
-                                  {new Date(record.date).getDate()}
-                                </div>
-                                <div className="text-[10px] sm:text-xs text-gray-600">
-                                  {new Date(record.date).toLocaleDateString('en-US', { month: 'short' })}
-                                </div>
-                              </div>
-
-                              {/* Card */}
-                              <Card className="flex-1 hover:shadow-md transition-shadow cursor-pointer" onClick={() => viewRecordDetails(record)}>
-                                <CardContent className="p-3 sm:p-4">
-                                  <div className="flex items-start gap-2 sm:gap-3">
-                                    {/* Icon */}
-                                    <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg ${getTypeColor(record.type)} flex items-center justify-center flex-shrink-0`}>
-                                      <TypeIcon className="w-4 h-4 sm:w-5 sm:h-5" />
-                                    </div>
-
-                                    {/* Content */}
-                                    <div className="flex-1 min-w-0">
-                                      <div className="flex items-start justify-between gap-2 mb-1">
-                                        <h4 className="font-semibold text-sm sm:text-base text-gray-900 truncate">{record.title}</h4>
-                                        <Badge variant="outline" className="capitalize text-[10px] sm:text-xs flex-shrink-0">
-                                          {record.type.replace('-', ' ')}
-                                        </Badge>
-                                      </div>
-                                      
-                                      {record.doctorName && (
-                                        <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-600 mb-2">
-                                          <User className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-                                          <span className="truncate">{record.doctorName}</span>
-                                        </div>
-                                      )}
-
-                                      {record.summary && (
-                                        <p className="text-xs sm:text-sm text-gray-600 mb-2 sm:mb-3 line-clamp-2">
-                                          {record.summary}
-                                        </p>
-                                      )}
-
-                                      <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                          {record.fileUrl && (
-                                            <Badge variant="secondary" className="text-[10px] sm:text-xs">
-                                              <FileText className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-1" />
-                                              PDF
-                                            </Badge>
-                                          )}
-                                        </div>
-                                        <div className="flex items-center gap-1">
-                                          <Button size="sm" variant="ghost" className="h-7 sm:h-8 text-xs sm:text-sm px-2 sm:px-3">
-                                            <Eye className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1" />
-                                            <span className="hidden sm:inline">View</span>
-                                          </Button>
-                                          {record.fileUrl && (
-                                            <Button size="sm" variant="ghost" className="h-7 sm:h-8 px-2">
-                                              <Download className="w-3 h-3 sm:w-4 sm:h-4" />
-                                            </Button>
-                                          )}
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </CardContent>
-                              </Card>
-                            </div>
-                          </motion.div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })}
-
-              {filteredRecords.length === 0 && (
-                <div className="text-center py-8 sm:py-12">
-                  <FileText className="w-12 h-12 sm:w-16 sm:h-16 text-gray-300 mx-auto mb-3 sm:mb-4" />
-                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2">No records found</h3>
-                  <p className="text-sm sm:text-base text-gray-600">Try adjusting your search or filters</p>
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="list" className="space-y-2 sm:space-y-3">
-              {filteredRecords.map((record, index) => {
-                const TypeIcon = getTypeIcon(record.type);
-                return (
-                  <motion.div
-                    key={record.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                  >
-                    <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => viewRecordDetails(record)}>
-                      <CardContent className="p-3 sm:p-4">
-                        <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
-                          <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg ${getTypeColor(record.type)} flex items-center justify-center flex-shrink-0`}>
-                            <TypeIcon className="w-5 h-5 sm:w-6 sm:h-6" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <h4 className="font-semibold text-sm sm:text-base text-gray-900 truncate">{record.title}</h4>
-                              <Badge variant="outline" className="capitalize text-[10px] sm:text-xs flex-shrink-0">
-                                {record.type.replace('-', ' ')}
-                              </Badge>
-                            </div>
-                            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-xs sm:text-sm text-gray-600">
-                              <span>{new Date(record.date).toLocaleDateString('en-US', { 
-                                month: 'short', 
-                                day: 'numeric', 
-                                year: 'numeric' 
-                              })}</span>
-                              {record.doctorName && (
-                                <>
-                                  <span className="hidden sm:inline">•</span>
-                                  <span className="truncate">{record.doctorName}</span>
-                                </>
-                              )}
-                            </div>
-                          </div>
-                          <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 flex-shrink-0" />
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                );
-              })}
-            </TabsContent>
-          </Tabs>
-        </div>
-
-        {/* Sidebar */}
-        <div className="space-y-4 sm:space-y-6">
-          {/* Summary Stats */}
-          <Card>
-            <CardContent className="p-4 sm:p-5 md:p-6">
-              <h3 className="font-semibold text-sm sm:text-base text-gray-900 mb-3 sm:mb-4">Record Summary</h3>
-              <div className="space-y-2 sm:space-y-3">
-                {recordTypes.slice(1).map((type) => {
-                  const count = mockMedicalRecords.filter(r => r.type === type.value).length;
-                  return (
-                    <div key={type.value} className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5 sm:gap-2">
-                        <type.icon className="w-3 h-3 sm:w-4 sm:h-4 text-gray-600 flex-shrink-0" />
-                        <span className="text-xs sm:text-sm text-gray-600">{type.label}</span>
-                      </div>
-                      <span className="font-semibold text-sm sm:text-base">{count}</span>
-                    </div>
-                  );
-                })}
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                <CalendarDays className="w-5 h-5 text-blue-600" />
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Recent Doctors */}
-          <Card>
-            <CardContent className="p-4 sm:p-5 md:p-6">
-              <h3 className="font-semibold text-sm sm:text-base text-gray-900 mb-3 sm:mb-4">Recent Doctors</h3>
-              <div className="space-y-2 sm:space-y-3">
-                {Array.from(new Set(mockMedicalRecords.map(r => r.doctorName).filter(Boolean))).slice(0, 3).map((doctorName) => (
-                  <div key={doctorName} className="flex items-center gap-2 sm:gap-3">
-                    <Avatar className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0">
-                      <AvatarImage src={`/doctors/${doctorName?.toLowerCase().replace('dr. ', '').split(' ')[0]}.jpg`} />
-                      <AvatarFallback>{doctorName?.[4]}{doctorName?.split(' ')[1]?.[0]}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-xs sm:text-sm text-gray-900 truncate">{doctorName}</p>
-                      <p className="text-[10px] sm:text-xs text-gray-600">
-                        {mockMedicalRecords.filter(r => r.doctorName === doctorName).length} records
-                      </p>
-                    </div>
-                  </div>
-                ))}
+              <div>
+                <p className="text-2xl font-bold text-gray-900">{filteredFuture.length}</p>
+                <p className="text-sm text-gray-600">Upcoming</p>
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Quick Actions */}
-          <Card className="bg-primary/5 border-primary/20">
-            <CardContent className="p-4 sm:p-5 md:p-6">
-              <h3 className="font-semibold text-sm sm:text-base text-gray-900 mb-3 sm:mb-4">Quick Actions</h3>
-              <div className="space-y-2">
-                <Button variant="outline" className="w-full justify-start h-9 sm:h-10 text-xs sm:text-sm" size="sm">
-                  <Download className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
-                  <span className="hidden sm:inline">Download All Records</span>
-                  <span className="sm:hidden">Download All</span>
-                </Button>
-                <Button variant="outline" className="w-full justify-start h-9 sm:h-10 text-xs sm:text-sm" size="sm">
-                  <FileText className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
-                  <span className="hidden sm:inline">Request Records</span>
-                  <span className="sm:hidden">Request</span>
-                </Button>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                <CheckCircle className="w-5 h-5 text-green-600" />
               </div>
-            </CardContent>
-          </Card>
-        </div>
+              <div>
+                <p className="text-2xl font-bold text-gray-900">
+                  {filteredPast.filter(c => c.status === 'completed').length}
+                </p>
+                <p className="text-sm text-gray-600">Completed</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                <History className="w-5 h-5 text-gray-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-gray-900">
+                  {filteredFuture.length + filteredPast.length}
+                </p>
+                <p className="text-sm text-gray-600">Total</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Record Details Dialog */}
-      <Dialog open={showDetails} onOpenChange={setShowDetails}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-base sm:text-lg">{selectedRecord?.title}</DialogTitle>
-          </DialogHeader>
-          {selectedRecord && (
-            <div className="space-y-3 sm:space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                <div>
-                  <p className="text-xs sm:text-sm text-gray-600">Date</p>
-                  <p className="font-medium text-sm sm:text-base">{new Date(selectedRecord.date).toLocaleDateString('en-US', { 
-                    month: 'long', 
-                    day: 'numeric', 
-                    year: 'numeric' 
-                  })}</p>
-                </div>
-                <div>
-                  <p className="text-xs sm:text-sm text-gray-600">Type</p>
-                  <Badge variant="outline" className="capitalize text-xs sm:text-sm">
-                    {selectedRecord.type.replace('-', ' ')}
-                  </Badge>
-                </div>
-                {selectedRecord.doctorName && (
-                  <div className="col-span-1 sm:col-span-2">
-                    <p className="text-xs sm:text-sm text-gray-600">Doctor</p>
-                    <p className="font-medium text-sm sm:text-base">{selectedRecord.doctorName}</p>
-                  </div>
-                )}
+      {/* Tabs for All, Future, Past */}
+      <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="all" className="text-xs sm:text-sm">
+            All Consultations
+          </TabsTrigger>
+          <TabsTrigger value="future" className="text-xs sm:text-sm">
+            Upcoming ({filteredFuture.length})
+          </TabsTrigger>
+          <TabsTrigger value="past" className="text-xs sm:text-sm">
+            Past ({filteredPast.length})
+          </TabsTrigger>
+        </TabsList>
+
+        {/* All Consultations Tab */}
+        <TabsContent value="all" className="space-y-6">
+          {/* Future Meetings Section */}
+          {filteredFuture.length > 0 && (
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <CalendarDays className="w-5 h-5 text-primary" />
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Future Scheduled Meetings
+                </h2>
+                <Badge variant="secondary">{filteredFuture.length}</Badge>
               </div>
-
-              {selectedRecord.summary && (
-                <div>
-                  <p className="text-xs sm:text-sm text-gray-600 mb-2">Summary</p>
-                  <p className="text-sm sm:text-base text-gray-900">{selectedRecord.summary}</p>
-                </div>
-              )}
-
-              {selectedRecord.fileUrl && (
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <Button className="flex-1 h-9 sm:h-10 text-sm">
-                    <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
-                    View Document
-                  </Button>
-                  <Button variant="outline" className="flex-1 h-9 sm:h-10 text-sm">
-                    <Download className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
-                    Download
-                  </Button>
-                </div>
-              )}
+              <div className="space-y-3">
+                {filteredFuture.map((consultation) => (
+                  <ConsultationCard key={consultation.id} consultation={consultation} />
+                ))}
+              </div>
             </div>
           )}
-        </DialogContent>
-      </Dialog>
+
+          {/* Past Meetings Section */}
+          {filteredPast.length > 0 && (
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <History className="w-5 h-5 text-gray-600" />
+                <h2 className="text-xl font-semibold text-gray-900">Past Meetings</h2>
+                <Badge variant="secondary">{filteredPast.length}</Badge>
+              </div>
+              <div className="space-y-3">
+                {filteredPast.map((consultation) => (
+                  <ConsultationCard key={consultation.id} consultation={consultation} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* No Results */}
+          {filteredFuture.length === 0 && filteredPast.length === 0 && (
+            <Card>
+              <CardContent className="p-12 text-center">
+                <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  No consultations found
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  {searchQuery
+                    ? 'Try adjusting your search query'
+                    : 'You have no consultations yet'}
+                </p>
+                {searchQuery && (
+                  <Button variant="outline" onClick={() => setSearchQuery('')}>
+                    Clear Search
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        {/* Future Only Tab */}
+        <TabsContent value="future" className="space-y-3">
+          {filteredFuture.length > 0 ? (
+            filteredFuture.map((consultation) => (
+              <ConsultationCard key={consultation.id} consultation={consultation} />
+            ))
+          ) : (
+            <Card>
+              <CardContent className="p-12 text-center">
+                <CalendarDays className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  No upcoming consultations
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  Schedule a consultation with a doctor to see it here
+                </p>
+                <Button onClick={() => navigate('/patient-dashboard/doctor-selection')}>
+                  Find a Doctor
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        {/* Past Only Tab */}
+        <TabsContent value="past" className="space-y-3">
+          {filteredPast.length > 0 ? (
+            filteredPast.map((consultation) => (
+              <ConsultationCard key={consultation.id} consultation={consultation} />
+            ))
+          ) : (
+            <Card>
+              <CardContent className="p-12 text-center">
+                <History className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  No past consultations
+                </h3>
+                <p className="text-gray-600">
+                  Your completed consultations will appear here
+                </p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
 
+export { MedicalHistory };
 export default MedicalHistory;

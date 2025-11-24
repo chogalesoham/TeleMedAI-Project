@@ -5,8 +5,8 @@ import {
   SymptomIntake,
   PreDiagnosis,
   DoctorSelection,
+  DoctorProfile,
   AppointmentBooking,
-  WaitingRoom,
   LiveConsultation,
   ConsultationSummary,
   Medications,
@@ -15,7 +15,6 @@ import {
   AIChatbot,
   DietLifestyle,
   NearbyClinics,
-  SpecialistRecommendation,
   Profile,
   Settings,
   Support,
@@ -59,12 +58,12 @@ export const patientRouter = createBrowserRouter([
         element: <DoctorSelection />,
       },
       {
-        path: 'book-appointment',
-        element: <AppointmentBooking />,
+        path: 'doctor/:id',
+        element: <DoctorProfile />,
       },
       {
-        path: 'waiting-room',
-        element: <WaitingRoom />,
+        path: 'book-appointment',
+        element: <AppointmentBooking />,
       },
       {
         path: 'consultation',
@@ -97,10 +96,6 @@ export const patientRouter = createBrowserRouter([
       {
         path: 'nearby-clinics',
         element: <NearbyClinics />,
-      },
-      {
-        path: 'specialists',
-        element: <SpecialistRecommendation />,
       },
       {
         path: 'profile',

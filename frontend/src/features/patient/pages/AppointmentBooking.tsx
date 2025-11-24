@@ -18,7 +18,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { mockDoctors } from '../data/mockData';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 
 const timeSlots = [
   '09:00 AM', '09:30 AM', '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM',
@@ -29,8 +29,12 @@ const timeSlots = [
 export const AppointmentBooking = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const doctorId = searchParams.get('doctorId') || '1';
-  const doctor = mockDoctors.find(d => d.id === doctorId) || mockDoctors[0];
+  const location = useLocation();
+  
+  // Get doctor from navigation state or fallback to query params or default
+  const doctorFromState = location.state?.doctor;
+  const doctorId = searchParams.get('doctorId') || doctorFromState?.id || '1';
+  const doctor = doctorFromState || mockDoctors.find(d => d.id === doctorId) || mockDoctors[0];
 
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [selectedTime, setSelectedTime] = useState<string>('');

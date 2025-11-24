@@ -24,14 +24,14 @@ import {
   Settings as DoctorSettings
 } from "@/features/doctor";
 
-// Patient Dashboard Pages - All 19 pages
+// Patient Dashboard Pages
 import {
   DashboardHome,
   SymptomIntake,
   PreDiagnosis,
   DoctorSelection,
+  DoctorProfile,
   AppointmentBooking,
-  WaitingRoom,
   LiveConsultation,
   ConsultationSummary,
   Medications,
@@ -40,7 +40,6 @@ import {
   AIChatbot,
   DietLifestyle,
   NearbyClinics,
-  SpecialistRecommendation,
   Profile,
   Settings,
   Support,
@@ -112,9 +111,9 @@ const App = () => (
             <Route path="pre-diagnosis" element={<PreDiagnosis />} />
             <Route path="doctor-selection" element={<DoctorSelection />} />
             <Route path="doctors" element={<DoctorSelection />} /> {/* Alias */}
+            <Route path="doctor/:id" element={<DoctorProfile />} />
             <Route path="appointment-booking" element={<AppointmentBooking />} />
             <Route path="book-appointment" element={<AppointmentBooking />} /> {/* Alias */}
-            <Route path="waiting-room" element={<WaitingRoom />} />
             <Route path="live-consultation" element={<LiveConsultation />} />
             <Route path="consultation-summary" element={<ConsultationSummary />} />
             <Route path="medications" element={<Medications />} />
@@ -125,7 +124,6 @@ const App = () => (
             <Route path="chatbot" element={<AIChatbot />} /> {/* Alias */}
             <Route path="diet-lifestyle" element={<DietLifestyle />} />
             <Route path="nearby-clinics" element={<NearbyClinics />} />
-            <Route path="specialist-recommendation" element={<SpecialistRecommendation />} />
             <Route path="profile" element={<Profile />} />
             <Route path="settings" element={<Settings />} />
             <Route path="support" element={<Support />} />

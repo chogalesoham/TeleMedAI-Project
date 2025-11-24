@@ -30,15 +30,12 @@ import {
   X,
   Bell,
   ChevronDown,
-  Clock,
   ChevronLeft,
   ChevronRight,
   ClipboardCheck,
   Pill,
   Upload,
-  FileHeart,
   Apple,
-  Sparkles,
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
@@ -53,17 +50,13 @@ const navigation: NavItem[] = [
   { name: 'Symptom Intake', path: '/patient-dashboard/symptom-intake', icon: Activity },
   { name: 'Pre-Diagnosis', path: '/patient-dashboard/pre-diagnosis', icon: FileText },
   { name: 'Doctor Selection', path: '/patient-dashboard/doctor-selection', icon: Stethoscope },
-  { name: 'Book Appointment', path: '/patient-dashboard/appointment-booking', icon: Calendar },
-  { name: 'Waiting Room', path: '/patient-dashboard/waiting-room', icon: Clock },
   { name: 'Live Consultation', path: '/patient-dashboard/live-consultation', icon: Video },
-  { name: 'Consultation Summary', path: '/patient-dashboard/consultation-summary', icon: ClipboardCheck },
   { name: 'Medications', path: '/patient-dashboard/medications', icon: Pill },
   { name: 'Report Upload', path: '/patient-dashboard/report-upload', icon: Upload },
-  { name: 'Medical History', path: '/patient-dashboard/medical-history', icon: FileHeart },
+  { name: 'My Consultations', path: '/patient-dashboard/medical-history', icon: Calendar },
   { name: 'AI Chatbot', path: '/patient-dashboard/ai-chatbot', icon: Bot },
   { name: 'Diet & Lifestyle', path: '/patient-dashboard/diet-lifestyle', icon: Apple },
   { name: 'Nearby Clinics', path: '/patient-dashboard/nearby-clinics', icon: MapPin },
-  { name: 'Specialists', path: '/patient-dashboard/specialist-recommendation', icon: Sparkles },
 ];
 
 const PatientDashboardLayout = () => {
