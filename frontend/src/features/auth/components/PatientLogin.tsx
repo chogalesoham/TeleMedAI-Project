@@ -5,9 +5,12 @@ import { Input } from '@/components/shared';
 import { Button } from '@/components/ui/button';
 import { Mail, Lock, ArrowRight, Heart, Shield, Clock, CheckCircle2 } from 'lucide-react';
 import { authAnimations } from '@/constants/authAnimations';
+import { patientLogin } from '@/services/auth.service';
+import { useToast } from '@/hooks/use-toast';
 
 export const PatientLogin = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -29,34 +32,49 @@ export const PatientLogin = () => {
     }
     if (!formData.password) {
       newErrors.password = 'Password is required';
-    } else if (formData.password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters';
     }
     
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       setIsLoading(false);
+      toast({
+        title: 'Validation Error',
+        description: 'Please fill in all fields correctly',
+        variant: 'destructive'
+      });
       return;
     }
 
-    // Simulate API call
-    setTimeout(() => {
-      // Store authentication data
-      const mockToken = 'mock-jwt-token-' + Date.now();
-      localStorage.setItem('authToken', mockToken);
-      localStorage.setItem('userRole', 'patient');
-      localStorage.setItem('userData', JSON.stringify({
-        id: '1',
-        name: 'John Doe',
+    try {
+      const loginData = {
         email: formData.email,
-        role: 'patient'
-      }));
+        password: formData.password
+      };
 
+      const response = await patientLogin(loginData);
+
+      if (response.success) {
+        toast({
+          title: 'Login Successful!',
+          description: `Welcome back, ${response.data.user.name}`,
+        });
+
+        // Use the redirect URL from backend (smart routing based on onboarding status)
+        const redirectTo = response.data.redirectTo || '/patient-dashboard';
+        
+        setTimeout(() => {
+          navigate(redirectTo);
+        }, 1000);
+      }
+    } catch (error: any) {
+      toast({
+        title: 'Login Failed',
+        description: error.message || 'Invalid email or password',
+        variant: 'destructive'
+      });
+    } finally {
       setIsLoading(false);
-      
-      // Redirect to patient dashboard
-      navigate('/patient-dashboard');
-    }, 1500);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -47,6 +47,9 @@ import {
   Logout,
 } from "@/features/patient/pages";
 
+// Patient Onboarding
+import { PatientOnboarding, OnboardingComplete } from "@/features/patient/pages/onboarding";
+
 // Pages
 import NotFound from "@/pages/NotFound";
 
@@ -84,6 +87,18 @@ const App = () => (
             <PublicRoute restricted>
               <DoctorSignup />
             </PublicRoute>
+          } />
+
+          {/* Patient Onboarding Routes - Protected */}
+          <Route path="/patient-onboarding/*" element={
+            <ProtectedRoute>
+              <PatientOnboarding />
+            </ProtectedRoute>
+          } />
+          <Route path="/onboarding-complete" element={
+            <ProtectedRoute>
+              <OnboardingComplete />
+            </ProtectedRoute>
           } />
 
           {/* patient Dashboard Route  */}

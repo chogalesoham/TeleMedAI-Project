@@ -1,5 +1,6 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { ReactNode } from 'react';
+import { isAuthenticated, getStoredUser } from '@/services/auth.service';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -15,14 +16,15 @@ interface ProtectedRouteProps {
 export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const location = useLocation();
   
-  // Check if user is authenticated
-  const isAuthenticated = !!localStorage.getItem('authToken');
-  const userRole = localStorage.getItem('userRole'); // 'patient' or 'doctor'
-
-  if (!isAuthenticated) {
+  // Check if user is authenticated using auth service
+  if (!isAuthenticated()) {
     // Redirect to login, but save the location they were trying to go to
     return <Navigate to="/patient-login" state={{ from: location }} replace />;
   }
+
+  // Get user data
+  const user = getStoredUser();
+  const userRole = user?.role;
 
   // Optional: Check if user has correct role
   if (location.pathname.startsWith('/patient') && userRole !== 'patient') {

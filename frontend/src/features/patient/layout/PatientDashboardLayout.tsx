@@ -1,8 +1,10 @@
-import { Outlet } from 'react-router-dom';
-import { useState } from 'react';
+import { Outlet, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useToast } from '@/hooks/use-toast';
+import { logout, getStoredUser, getCurrentUser } from '@/services/auth.service';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,7 +41,6 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
-import { mockUserProfile } from '../data/mockData';
 
 interface NavItem {
   name: string;
@@ -68,9 +69,64 @@ const navigation: NavItem[] = [
 const PatientDashboardLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false); // Mobile sidebar
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true); // Desktop sidebar collapse - DEFAULT CLOSED
+  const [userData, setUserData] = useState<any>(null); // Real user data from DB
   const location = useLocation();
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
   const isActivePath = (path: string) => location.pathname === path;
+
+  // Load user data from localStorage first, then fetch fresh from API
+  useEffect(() => {
+    const loadUserData = async () => {
+      // Get stored user immediately for fast display
+      const storedUser = getStoredUser();
+      if (storedUser) {
+        setUserData(storedUser);
+      }
+
+      // Fetch fresh data from API
+      try {
+        const response = await getCurrentUser();
+        console.log('🔥 Dashboard - API Response:', response);
+        // API returns { success: true, data: { user: {...}, onboardingCompleted: true } }
+        if (response?.success && response?.data?.user) {
+          setUserData(response.data.user);
+          console.log('✅ Dashboard - User Data Set:', response.data.user);
+        } else if (response?.data) {
+          // Fallback
+          setUserData(response.data);
+        }
+      } catch (error) {
+        console.error('❌ Dashboard - Failed to fetch user data:', error);
+        // Keep using stored user data if API fails
+      }
+    };
+
+    loadUserData();
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast({
+        title: 'Logged out successfully',
+        description: 'You have been logged out. Redirecting to login...',
+      });
+      setTimeout(() => {
+        navigate('/patient-login');
+      }, 1000);
+    } catch (error: any) {
+      toast({
+        title: 'Logout successful',
+        description: 'Redirecting to login page...',
+        variant: 'default',
+      });
+      setTimeout(() => {
+        navigate('/patient-login');
+      }, 1000);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
@@ -109,23 +165,28 @@ const PatientDashboardLayout = () => {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="flex items-center gap-1.5 sm:gap-2 px-1.5 sm:px-2 h-9 sm:h-10">
                   <Avatar className="h-7 w-7 sm:h-8 sm:w-8">
-                    <AvatarImage src={mockUserProfile.avatar} alt={mockUserProfile.name} />
+                    <AvatarImage src={userData?.avatar} alt={userData?.name || 'User'} />
                     <AvatarFallback className="text-xs sm:text-sm">
-                      {mockUserProfile.name
-                        .split(' ')
-                        .map((n) => n[0])
-                        .join('')}
+                      {userData?.name
+                        ? userData.name
+                            .split(' ')
+                            .map((n) => n[0])
+                            .join('')
+                            .toUpperCase()
+                        : 'U'}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="hidden md:block text-xs sm:text-sm font-medium max-w-[100px] truncate">{mockUserProfile.name}</span>
+                  <span className="hidden md:block text-xs sm:text-sm font-medium max-w-[100px] truncate">
+                    {userData?.name || 'Loading...'}
+                  </span>
                   <ChevronDown className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 hidden sm:block" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel>
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium">{mockUserProfile.name}</p>
-                    <p className="text-xs text-gray-500">{mockUserProfile.email}</p>
+                    <p className="text-sm font-medium">{userData?.name || 'User'}</p>
+                    <p className="text-xs text-gray-500">{userData?.email || 'No email'}</p>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
@@ -148,14 +209,12 @@ const PatientDashboardLayout = () => {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link
-                    to="/patient-dashboard/logout"
-                    className="flex items-center gap-2 cursor-pointer text-red-600"
-                  >
-                    <LogOut className="h-4 w-4" />
-                    <span>Logout</span>
-                  </Link>
+                <DropdownMenuItem
+                  onClick={handleLogout}
+                  className="cursor-pointer text-red-600 focus:text-red-600"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  <span>Logout</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

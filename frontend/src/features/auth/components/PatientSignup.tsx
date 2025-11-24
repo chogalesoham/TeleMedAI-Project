@@ -6,6 +6,8 @@ import { Select } from '@/components/shared';
 import { Button } from '@/components/ui/button';
 import { Mail, Lock, User, Phone, Calendar, Users2, ArrowRight, Heart, Shield, CheckCircle2, Clock } from 'lucide-react';
 import { authAnimations } from '@/constants/authAnimations';
+import { patientSignup } from '@/services/auth.service';
+import { useToast } from '@/hooks/use-toast';
 
 const GENDER_OPTIONS = [
   { value: 'male', label: 'Male' },
@@ -16,6 +18,7 @@ const GENDER_OPTIONS = [
 
 export const PatientSignup = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -40,36 +43,78 @@ export const PatientSignup = () => {
     if (!formData.age) newErrors.age = 'Age is required';
     if (!formData.gender) newErrors.gender = 'Gender is required';
     if (!formData.password) newErrors.password = 'Password is required';
-    if (formData.password.length < 8) newErrors.password = 'Password must be at least 8 characters';
+    if (formData.password.length < 6) newErrors.password = 'Password must be at least 6 characters';
     if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
     
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       setIsLoading(false);
+      toast({
+        title: 'Validation Error',
+        description: 'Please fill in all required fields correctly',
+        variant: 'destructive'
+      });
       return;
     }
 
-    // Simulate API call
-    setTimeout(() => {
-      // Store authentication data after successful signup
-      const mockToken = 'mock-jwt-token-' + Date.now();
-      localStorage.setItem('authToken', mockToken);
-      localStorage.setItem('userRole', 'patient');
-      localStorage.setItem('userData', JSON.stringify({
-        id: '1',
+    try {
+      // Calculate date of birth from age
+      const today = new Date();
+      const birthYear = today.getFullYear() - parseInt(formData.age);
+      const dateOfBirth = `${birthYear}-01-01`;
+
+      // Capitalize gender to match backend enum
+      const capitalizeGender = (gender: string) => {
+        if (gender === 'male') return 'Male';
+        if (gender === 'female') return 'Female';
+        if (gender === 'other') return 'Other';
+        if (gender === 'prefer-not-to-say') return 'Prefer not to say';
+        return gender;
+      };
+
+      const signupData = {
         name: formData.fullName,
         email: formData.email,
+        password: formData.password,
         phone: formData.phone,
-        age: formData.age,
-        gender: formData.gender,
-        role: 'patient'
-      }));
+        dateOfBirth: dateOfBirth,
+        gender: capitalizeGender(formData.gender),
+        location: {
+          city: '',
+          state: '',
+          country: '',
+          zipCode: ''
+        }
+      };
 
-      setIsLoading(false);
+      console.log('Sending signup data:', signupData); // Debug log
+      const response = await patientSignup(signupData);
+
+      if (response.success) {
+        toast({
+          title: 'Account Created Successfully!',
+          description: 'Welcome to TeleMedAI. Let\'s complete your health profile.',
+        });
+
+        // Redirect to patient onboarding
+        setTimeout(() => {
+          navigate('/patient-onboarding');
+        }, 1000);
+      }
+    } catch (error: any) {
+      console.error('Signup error:', error); // Debug log
       
-      // Redirect to patient dashboard
-      navigate('/patient-dashboard');
-    }, 1500);
+      // Extract error message from response
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to create account. Please try again.';
+      
+      toast({
+        title: 'Signup Failed',
+        description: errorMessage,
+        variant: 'destructive'
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
