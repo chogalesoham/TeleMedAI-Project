@@ -10,6 +10,7 @@ import PatientDashboardLayout from "@/features/patient/layout/PatientDashboardLa
 
 // Auth Components
 import { ProtectedRoute, PublicRoute } from "@/components/auth/ProtectedRoute";
+import { AdminProtectedRoute, AdminLoginRedirect } from "@/components/auth/AdminProtectedRoute";
 
 // Features
 import { Landing } from "@/features/landing";
@@ -48,6 +49,20 @@ import {
 
 // Patient Onboarding
 import { PatientOnboarding, OnboardingComplete } from "@/features/patient/pages/onboarding";
+
+// Admin Components
+import { AdminLayout } from "@/features/admin/layouts/AdminLayout";
+import {
+  AdminLogin,
+  Dashboard as AdminDashboard,
+  Doctors as AdminDoctors,
+  DoctorDetails as AdminDoctorDetails,
+  Patients as AdminPatients,
+  PatientDetails as AdminPatientDetails,
+  Appointments as AdminAppointments,
+  Revenue as AdminRevenue,
+  Settings as AdminSettings,
+} from "@/features/admin";
 
 // Pages
 import NotFound from "@/pages/NotFound";
@@ -142,6 +157,29 @@ const App = () => (
             <Route path="/doctor-dashboard/reports" element={<Reports />} />
             <Route path="/doctor-dashboard/analytics" element={<Analytics />} />
             <Route path="/doctor-dashboard/settings" element={<DoctorSettings />} />
+          </Route>
+
+          {/* Admin Login Route - Hidden, only accessible via URL */}
+          <Route path="/admin-login" element={
+            <AdminLoginRedirect>
+              <AdminLogin />
+            </AdminLoginRedirect>
+          } />
+
+          {/* Admin Dashboard Routes - Protected */}
+          <Route path="/admin" element={
+            <AdminProtectedRoute>
+              <AdminLayout />
+            </AdminProtectedRoute>
+          }>
+            <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="doctors" element={<AdminDoctors />} />
+            <Route path="doctors/:id" element={<AdminDoctorDetails />} />
+            <Route path="patients" element={<AdminPatients />} />
+            <Route path="patients/:id" element={<AdminPatientDetails />} />
+            <Route path="appointments" element={<AdminAppointments />} />
+            <Route path="revenue" element={<AdminRevenue />} />
+            <Route path="settings" element={<AdminSettings />} />
           </Route>
 
           {/* 404 Route - Must be last */}
