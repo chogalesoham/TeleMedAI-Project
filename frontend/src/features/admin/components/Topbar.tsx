@@ -1,4 +1,5 @@
-import { Menu, Bell, Search, User } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Menu, Bell, Search, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -16,6 +17,14 @@ interface TopbarProps {
 }
 
 export const Topbar = ({ onMenuClick }: TopbarProps) => {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    // Clear admin token
+    localStorage.removeItem('admin_token');
+    // Redirect to admin login page
+    navigate('/admin-login');
+  };
   return (
     <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-lg border-b border-gray-200/50 shadow-sm">
       <div className="flex items-center justify-between px-4 py-3.5 lg:px-6 xl:px-8">
@@ -100,13 +109,21 @@ export const Topbar = ({ onMenuClick }: TopbarProps) => {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="cursor-pointer">
+              <DropdownMenuItem className="cursor-pointer hover:bg-gray-50">
                 <User className="w-4 h-4 mr-3 text-gray-500" />
                 <span className="font-medium">Profile</span>
               </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer">
+              <DropdownMenuItem className="cursor-pointer hover:bg-gray-50">
                 <Bell className="w-4 h-4 mr-3 text-gray-500" />
                 <span className="font-medium">Notifications</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                className="cursor-pointer hover:bg-red-50 text-red-600 font-semibold focus:bg-red-50 focus:text-red-700"
+                onClick={handleLogout}
+              >
+                <LogOut className="w-4 h-4 mr-3" />
+                <span>Logout</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
