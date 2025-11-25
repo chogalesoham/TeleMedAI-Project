@@ -364,9 +364,82 @@ const updateProfile = async (req, res) => {
   }
 };
 
+/**
+ * Admin Login
+ * POST /api/auth/admin/login
+ */
+const adminLogin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // Validation
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide email and password'
+      });
+    }
+
+    // Find admin user by email (include password field)
+    const user = await User.findOne({ email, role: 'admin' }).select('+password');
+    
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid admin credentials'
+      });
+    }
+
+    // Check if account is active
+    if (!user.isActive) {
+      return res.status(403).json({
+        success: false,
+        message: 'Your account has been deactivated. Please contact support.'
+      });
+    }
+
+    // Verify password
+    const isPasswordCorrect = await user.comparePassword(password);
+    
+    if (!isPasswordCorrect) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid admin credentials'
+      });
+    }
+
+    // Update last login
+    user.lastLogin = new Date();
+    await user.save();
+
+    // Generate JWT token
+    const token = user.generateAuthToken();
+
+    // Return admin data and token
+    return res.status(200).json({
+      success: true,
+      message: 'Admin login successful',
+      data: {
+        token,
+        user: user.getPublicProfile(),
+        redirectTo: '/admin/dashboard'
+      }
+    });
+
+  } catch (error) {
+    console.error('Admin login error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Login failed. Please try again.',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   patientSignup,
   patientLogin,
+  adminLogin,
   getCurrentUser,
   logout,
   changePassword,

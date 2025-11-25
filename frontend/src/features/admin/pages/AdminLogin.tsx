@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { adminLogin } from '@/services/auth.service';
 
 export const AdminLogin = () => {
   const navigate = useNavigate();
@@ -23,17 +24,26 @@ export const AdminLogin = () => {
     setError('');
     setIsLoading(true);
 
-    // Simulate login (replace with actual API call)
-    setTimeout(() => {
-      if (formData.email && formData.password) {
-        // Store admin token
-        localStorage.setItem('admin_token', 'demo-admin-token');
+    try {
+      // Call the real admin login API
+      const response = await adminLogin({
+        email: formData.email,
+        password: formData.password,
+      });
+
+      if (response.success) {
+        console.log('Admin logged in successfully:', response.data?.user);
+        // Redirect to admin dashboard
         navigate('/admin/dashboard');
       } else {
-        setError('Please enter valid credentials');
-        setIsLoading(false);
+        setError(response.message || 'Login failed');
       }
-    }, 1000);
+    } catch (error: any) {
+      console.error('Admin login error:', error);
+      setError(error.message || 'Invalid admin credentials');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -89,6 +89,29 @@ export const patientLogin = async (data: LoginData): Promise<AuthResponse> => {
 };
 
 /**
+ * Admin Login
+ */
+export const adminLogin = async (data: LoginData): Promise<AuthResponse> => {
+  try {
+    const response = await axios.post<AuthResponse>(
+      `${API_URL}/auth/admin/login`,
+      data
+    );
+    
+    // Store token and user data if login successful
+    if (response.data.success && response.data.data?.token) {
+      localStorage.setItem('token', response.data.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.data.user));
+    }
+    
+    return response.data;
+  } catch (error: any) {
+    console.error('Admin login error:', error);
+    throw new Error(error.response?.data?.message || 'Admin login failed. Please try again.');
+  }
+};
+
+/**
  * Get current user
  */
 export const getCurrentUser = async () => {

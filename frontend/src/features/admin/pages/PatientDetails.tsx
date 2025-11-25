@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -15,6 +16,7 @@ import {
   Upload,
   Stethoscope,
   Brain,
+  Loader2,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -29,116 +31,39 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { AdminService } from '@/services';
 
 export const PatientDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [patient, setPatient] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Mock data - in real app, fetch based on id
-  const patient = {
-    id: id,
-    name: 'John Doe',
-    email: 'john.doe@email.com',
-    phone: '+1 234-567-8901',
-    age: 35,
-    gender: 'Male',
-    bloodGroup: 'O+',
-    address: '123 Main St, New York, NY 10001',
-    emergencyContact: '+1 234-567-8999',
-    status: 'active',
-    joinDate: '2023-06-15',
-    lastVisit: '2024-01-20',
-    totalAppointments: 12,
-    medicalHistory: 'No major illnesses. Seasonal allergies. Regular checkups.',
+  useEffect(() => {
+    if (id) {
+      fetchPatientDetails();
+    }
+  }, [id]);
+
+  const fetchPatientDetails = async () => {
+    try {
+      setLoading(true);
+      const response = await AdminService.getPatientById(id!);
+
+      if (response.success && response.data) {
+        setPatient(response.data);
+        setError(null);
+      } else {
+        setError(response.error || 'Failed to fetch patient details');
+      }
+    } catch (err) {
+      setError('An error occurred while fetching patient details');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
-
-  const upcomingAppointments = [
-    {
-      id: 1,
-      doctor: 'Dr. Sarah Johnson',
-      specialty: 'Cardiology',
-      date: '2024-01-28',
-      time: '10:00 AM',
-      status: 'confirmed',
-    },
-    {
-      id: 2,
-      doctor: 'Dr. Michael Brown',
-      specialty: 'Dermatology',
-      date: '2024-02-05',
-      time: '2:00 PM',
-      status: 'pending',
-    },
-  ];
-
-  const pastAppointments = [
-    {
-      id: 1,
-      doctor: 'Dr. Sarah Johnson',
-      specialty: 'Cardiology',
-      date: '2024-01-20',
-      time: '10:00 AM',
-      status: 'completed',
-    },
-    {
-      id: 2,
-      doctor: 'Dr. Emily Davis',
-      specialty: 'Pediatrics',
-      date: '2024-01-15',
-      time: '3:00 PM',
-      status: 'completed',
-    },
-    {
-      id: 3,
-      doctor: 'Dr. Michael Brown',
-      specialty: 'Dermatology',
-      date: '2024-01-10',
-      time: '11:00 AM',
-      status: 'completed',
-    },
-  ];
-
-  const prescriptions = [
-    {
-      id: 1,
-      medication: 'Lisinopril 10mg',
-      doctor: 'Dr. Sarah Johnson',
-      date: '2024-01-20',
-      duration: '30 days',
-      dosage: '1 tablet daily',
-    },
-    {
-      id: 2,
-      medication: 'Vitamin D3 1000 IU',
-      doctor: 'Dr. Emily Davis',
-      date: '2024-01-15',
-      duration: '60 days',
-      dosage: '1 tablet daily',
-    },
-  ];
-
-  const reports = [
-    { id: 1, name: 'Blood Test Report', doctor: 'Dr. Sarah Johnson', date: '2024-01-20', type: 'Lab Report' },
-    { id: 2, name: 'ECG Report', doctor: 'Dr. Sarah Johnson', date: '2024-01-20', type: 'Diagnostic' },
-    { id: 3, name: 'Skin Biopsy', doctor: 'Dr. Michael Brown', date: '2024-01-10', type: 'Lab Report' },
-  ];
-
-  const aiReports = [
-    {
-      id: 1,
-      date: '2024-01-22',
-      symptoms: 'Chest pain, Shortness of breath',
-      aiSuggestion: 'Possible cardiac concern. Recommend immediate consultation.',
-      priority: 'high',
-    },
-    {
-      id: 2,
-      date: '2024-01-10',
-      symptoms: 'Skin rash, Itching',
-      aiSuggestion: 'Possible allergic reaction. Dermatologist consultation recommended.',
-      priority: 'medium',
-    },
-  ];
 
   const getStatusBadge = (status: string) => {
     const colors: Record<string, string> = {
@@ -165,6 +90,47 @@ export const PatientDetails = () => {
     };
     return <Badge className={`${colors[priority]} font-semibold px-3 py-1 border`}>{priority}</Badge>;
   };
+
+  const formatDate = (date: string | null) => {
+    if (!date) return 'N/A';
+    return new Date(date).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="w-12 h-12 animate-spin text-blue-600" />
+        <span className="ml-4 text-lg text-gray-600">Loading patient details...</span>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error || !patient) {
+    return (
+      <div className="space-y-6">
+        <Button
+          variant="ghost"
+          onClick={() => navigate('/admin/patients')}
+          className="flex items-center gap-2 hover:bg-blue-50 font-semibold"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Patients
+        </Button>
+        <div className="text-center py-12">
+          <p className="text-red-600 font-semibold text-lg">{error || 'Patient not found'}</p>
+          <Button onClick={() => navigate('/admin/patients')} className="mt-4">
+            Back to Patients List
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 sm:space-y-7 lg:space-y-8 pb-8">
@@ -218,21 +184,37 @@ export const PatientDetails = () => {
                     <Phone className="w-5 h-5 text-blue-500" />
                     <span className="text-sm sm:text-base font-medium">{patient.phone}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-gray-700">
-                    <MapPin className="w-5 h-5 text-blue-500" />
-                    <span className="text-sm sm:text-base font-medium">{patient.address}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-gray-700">
-                    <Heart className="w-5 h-5 text-red-500" />
-                    <span className="text-sm sm:text-base font-medium">Blood Group: {patient.bloodGroup}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-gray-700">
-                    <Phone className="w-5 h-5 text-orange-500" />
-                    <span className="text-sm sm:text-base font-medium">Emergency: {patient.emergencyContact}</span>
-                  </div>
+                  {patient.location && (
+                    <div className="flex items-center gap-2 text-gray-700">
+                      <MapPin className="w-5 h-5 text-blue-500" />
+                      <span className="text-sm sm:text-base font-medium">
+                        {[patient.location.city, patient.location.state, patient.location.country]
+                          .filter(Boolean)
+                          .join(', ') || 'N/A'}
+                      </span>
+                    </div>
+                  )}
+                  {patient.healthProfile?.bloodGroup && (
+                    <div className="flex items-center gap-2 text-gray-700">
+                      <Heart className="w-5 h-5 text-red-500" />
+                      <span className="text-sm sm:text-base font-medium">
+                        Blood Group: {patient.healthProfile.bloodGroup}
+                      </span>
+                    </div>
+                  )}
+                  {patient.emergencyContacts?.primaryContact?.phone && (
+                    <div className="flex items-center gap-2 text-gray-700">
+                      <Phone className="w-5 h-5 text-orange-500" />
+                      <span className="text-sm sm:text-base font-medium">
+                        Emergency: {patient.emergencyContacts.primaryContact.phone}
+                      </span>
+                    </div>
+                  )}
                   <div className="flex items-center gap-2 text-gray-700">
                     <Calendar className="w-5 h-5 text-blue-500" />
-                    <span className="text-sm sm:text-base font-medium">Last Visit: {patient.lastVisit}</span>
+                    <span className="text-sm sm:text-base font-medium">
+                      Last Visit: {formatDate(patient.lastVisit)}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -249,9 +231,11 @@ export const PatientDetails = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs sm:text-sm text-gray-600 font-semibold uppercase tracking-wide">
-                    Total Appointments
+                    Onboarding Status
                   </p>
-                  <p className="text-2xl sm:text-3xl font-bold text-gray-900 mt-1">{patient.totalAppointments}</p>
+                  <p className="text-xl sm:text-2xl font-bold text-gray-900 mt-1">
+                    {patient.onboardingCompleted ? 'Complete' : 'Incomplete'}
+                  </p>
                 </div>
                 <div className="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-md">
                   <Calendar className="w-7 h-7 text-white" />
@@ -267,9 +251,11 @@ export const PatientDetails = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs sm:text-sm text-gray-600 font-semibold uppercase tracking-wide">
-                    Prescriptions
+                    Medications
                   </p>
-                  <p className="text-2xl sm:text-3xl font-bold text-gray-900 mt-1">{prescriptions.length}</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-gray-900 mt-1">
+                    {patient.currentHealthStatus?.currentMedications?.length || 0}
+                  </p>
                 </div>
                 <div className="p-3 bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-md">
                   <Pill className="w-7 h-7 text-white" />
@@ -284,8 +270,10 @@ export const PatientDetails = () => {
             <CardContent className="p-5 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs sm:text-sm text-gray-600 font-semibold uppercase tracking-wide">Reports</p>
-                  <p className="text-2xl sm:text-3xl font-bold text-gray-900 mt-1">{reports.length}</p>
+                  <p className="text-xs sm:text-sm text-gray-600 font-semibold uppercase tracking-wide">Allergies</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-gray-900 mt-1">
+                    {patient.currentHealthStatus?.allergies?.length || 0}
+                  </p>
                 </div>
                 <div className="p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-md">
                   <FileText className="w-7 h-7 text-white" />
@@ -363,158 +351,155 @@ export const PatientDetails = () => {
               {/* Medical History Tab */}
               <TabsContent value="medical" className="mt-6">
                 <div className="space-y-4">
-                  <div className="p-6 bg-gradient-to-r from-gray-50 to-blue-50/30 rounded-xl border border-gray-100">
-                    <h3 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
-                      <Activity className="w-5 h-5 text-blue-600" />
-                      Medical History Summary
-                    </h3>
-                    <p className="text-gray-700 leading-relaxed">{patient.medicalHistory}</p>
-                  </div>
+                  {patient.medicalHistory?.chronicDiseases && patient.medicalHistory.chronicDiseases.length > 0 && (
+                    <div className="p-6 bg-gradient-to-r from-gray-50 to-red-50/30 rounded-xl border border-gray-100">
+                      <h3 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                        <Activity className="w-5 h-5 text-red-600" />
+                        Chronic Diseases
+                      </h3>
+                      <div className="space-y-2">
+                        {patient.medicalHistory.chronicDiseases.map((disease: any, idx: number) => (
+                          <div key={idx} className="p-3 bg-white rounded-lg">
+                            <p className="font-semibold text-gray-900">{disease.name}</p>
+                            {disease.diagnosedYear && (
+                              <p className="text-sm text-gray-600">Diagnosed: {disease.diagnosedYear}</p>
+                            )}
+                            {disease.notes && <p className="text-sm text-gray-700 mt-1">{disease.notes}</p>}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {patient.medicalHistory?.previousSurgeries && patient.medicalHistory.previousSurgeries.length > 0 && (
+                    <div className="p-6 bg-gradient-to-r from-gray-50 to-purple-50/30 rounded-xl border border-gray-100">
+                      <h3 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                        <Stethoscope className="w-5 h-5 text-purple-600" />
+                        Previous Surgeries
+                      </h3>
+                      <div className="space-y-2">
+                        {patient.medicalHistory.previousSurgeries.map((surgery: any, idx: number) => (
+                          <div key={idx} className="p-3 bg-white rounded-lg">
+                            <p className="font-semibold text-gray-900">{surgery.name}</p>
+                            {surgery.year && <p className="text-sm text-gray-600">Year: {surgery.year}</p>}
+                            {surgery.notes && <p className="text-sm text-gray-700 mt-1">{surgery.notes}</p>}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {patient.medicalHistory?.familyMedicalHistory && patient.medicalHistory.familyMedicalHistory.length > 0 && (
+                    <div className="p-6 bg-gradient-to-r from-gray-50 to-blue-50/30 rounded-xl border border-gray-100">
+                      <h3 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                        <User className="w-5 h-5 text-blue-600" />
+                        Family Medical History
+                      </h3>
+                      <div className="space-y-2">
+                        {patient.medicalHistory.familyMedicalHistory.map((history: any, idx: number) => (
+                          <div key={idx} className="p-3 bg-white rounded-lg">
+                            <p className="font-semibold text-gray-900">{history.condition}</p>
+                            {history.relation && <p className="text-sm text-gray-600">Relation: {history.relation}</p>}
+                            {history.notes && <p className="text-sm text-gray-700 mt-1">{history.notes}</p>}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {(!patient.medicalHistory || 
+                    (!patient.medicalHistory.chronicDiseases?.length && 
+                     !patient.medicalHistory.previousSurgeries?.length && 
+                     !patient.medicalHistory.familyMedicalHistory?.length)) && (
+                    <div className="p-6 bg-gray-50 rounded-xl border border-gray-100 text-center">
+                      <p className="text-gray-600">No medical history recorded yet.</p>
+                    </div>
+                  )}
                 </div>
               </TabsContent>
 
               {/* Upcoming Appointments Tab */}
               <TabsContent value="upcoming" className="mt-6">
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="hover:bg-transparent border-gray-200">
-                        <TableHead className="font-bold text-gray-700">Doctor</TableHead>
-                        <TableHead className="font-bold text-gray-700">Specialty</TableHead>
-                        <TableHead className="font-bold text-gray-700">Date</TableHead>
-                        <TableHead className="font-bold text-gray-700">Time</TableHead>
-                        <TableHead className="font-bold text-gray-700">Status</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {upcomingAppointments.map((appointment) => (
-                        <TableRow key={appointment.id} className="hover:bg-blue-50/50 transition-colors">
-                          <TableCell className="font-semibold text-gray-900">{appointment.doctor}</TableCell>
-                          <TableCell className="text-gray-700">{appointment.specialty}</TableCell>
-                          <TableCell className="text-gray-700">{appointment.date}</TableCell>
-                          <TableCell className="text-gray-700">{appointment.time}</TableCell>
-                          <TableCell>{getAppointmentStatusBadge(appointment.status)}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                <div className="p-6 bg-gray-50 rounded-xl border border-gray-100 text-center">
+                  <Calendar className="w-12 h-12 mx-auto text-gray-300 mb-3" />
+                  <p className="text-gray-600">Appointment management coming soon.</p>
                 </div>
               </TabsContent>
 
               {/* Past Appointments Tab */}
               <TabsContent value="past" className="mt-6">
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="hover:bg-transparent border-gray-200">
-                        <TableHead className="font-bold text-gray-700">Doctor</TableHead>
-                        <TableHead className="font-bold text-gray-700">Specialty</TableHead>
-                        <TableHead className="font-bold text-gray-700">Date</TableHead>
-                        <TableHead className="font-bold text-gray-700">Time</TableHead>
-                        <TableHead className="font-bold text-gray-700">Status</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {pastAppointments.map((appointment) => (
-                        <TableRow key={appointment.id} className="hover:bg-blue-50/50 transition-colors">
-                          <TableCell className="font-semibold text-gray-900">{appointment.doctor}</TableCell>
-                          <TableCell className="text-gray-700">{appointment.specialty}</TableCell>
-                          <TableCell className="text-gray-700">{appointment.date}</TableCell>
-                          <TableCell className="text-gray-700">{appointment.time}</TableCell>
-                          <TableCell>{getAppointmentStatusBadge(appointment.status)}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                <div className="p-6 bg-gray-50 rounded-xl border border-gray-100 text-center">
+                  <Clock className="w-12 h-12 mx-auto text-gray-300 mb-3" />
+                  <p className="text-gray-600">Past appointments will be displayed here.</p>
                 </div>
               </TabsContent>
 
               {/* Prescriptions Tab */}
               <TabsContent value="prescriptions" className="mt-6">
                 <div className="space-y-4">
-                  {prescriptions.map((prescription) => (
-                    <div
-                      key={prescription.id}
-                      className="p-5 bg-gradient-to-r from-gray-50 to-green-50/30 rounded-xl border border-gray-100 hover:shadow-md transition-all"
-                    >
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 bg-gradient-to-br from-green-500 to-green-600 rounded-lg">
-                            <Pill className="w-5 h-5 text-white" />
+                  {patient.currentHealthStatus?.currentMedications && 
+                   patient.currentHealthStatus.currentMedications.length > 0 ? (
+                    patient.currentHealthStatus.currentMedications.map((medication: any, idx: number) => (
+                      <div
+                        key={idx}
+                        className="p-5 bg-gradient-to-r from-gray-50 to-green-50/30 rounded-xl border border-gray-100 hover:shadow-md transition-all"
+                      >
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-gradient-to-br from-green-500 to-green-600 rounded-lg">
+                              <Pill className="w-5 h-5 text-white" />
+                            </div>
+                            <div>
+                              <h4 className="font-bold text-gray-900">{medication.name}</h4>
+                              {medication.prescribedBy && (
+                                <p className="text-sm text-gray-600">Prescribed by {medication.prescribedBy}</p>
+                              )}
+                            </div>
                           </div>
-                          <div>
-                            <h4 className="font-bold text-gray-900">{prescription.medication}</h4>
-                            <p className="text-sm text-gray-600">Prescribed by {prescription.doctor}</p>
-                          </div>
+                          {medication.startDate && (
+                            <span className="text-sm text-gray-500">{formatDate(medication.startDate)}</span>
+                          )}
                         </div>
-                        <span className="text-sm text-gray-500">{prescription.date}</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3 pt-3 border-t border-gray-200">
+                          {medication.dosage && (
+                            <div>
+                              <p className="text-xs text-gray-500 uppercase tracking-wide font-semibold">Dosage</p>
+                              <p className="text-gray-700 font-medium">{medication.dosage}</p>
+                            </div>
+                          )}
+                          {medication.frequency && (
+                            <div>
+                              <p className="text-xs text-gray-500 uppercase tracking-wide font-semibold">Frequency</p>
+                              <p className="text-gray-700 font-medium">{medication.frequency}</p>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3 pt-3 border-t border-gray-200">
-                        <div>
-                          <p className="text-xs text-gray-500 uppercase tracking-wide font-semibold">Dosage</p>
-                          <p className="text-gray-700 font-medium">{prescription.dosage}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-500 uppercase tracking-wide font-semibold">Duration</p>
-                          <p className="text-gray-700 font-medium">{prescription.duration}</p>
-                        </div>
-                      </div>
+                    ))
+                  ) : (
+                    <div className="p-6 bg-gray-50 rounded-xl border border-gray-100 text-center">
+                      <Pill className="w-12 h-12 mx-auto text-gray-300 mb-3" />
+                      <p className="text-gray-600">No current medications recorded.</p>
                     </div>
-                  ))}
+                  )}
                 </div>
               </TabsContent>
 
               {/* Reports Tab */}
               <TabsContent value="reports" className="mt-6">
-                <div className="space-y-3">
-                  {reports.map((report) => (
-                    <div
-                      key={report.id}
-                      className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-purple-50/30 rounded-xl border border-gray-100 hover:shadow-md transition-all"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg">
-                          <FileText className="w-5 h-5 text-white" />
-                        </div>
-                        <div>
-                          <p className="font-semibold text-gray-900">{report.name}</p>
-                          <p className="text-sm text-gray-600">
-                            {report.doctor} • {report.date}
-                          </p>
-                        </div>
-                      </div>
-                      <Badge className="bg-purple-100 text-purple-800">{report.type}</Badge>
-                    </div>
-                  ))}
+                <div className="p-6 bg-gray-50 rounded-xl border border-gray-100 text-center">
+                  <FileText className="w-12 h-12 mx-auto text-gray-300 mb-3" />
+                  <p className="text-gray-600">Medical reports will be displayed here.</p>
+                  <p className="text-sm text-gray-500 mt-2">Feature coming soon.</p>
                 </div>
               </TabsContent>
 
               {/* AI Reports Tab */}
               <TabsContent value="ai" className="mt-6">
-                <div className="space-y-4">
-                  {aiReports.map((report) => (
-                    <div
-                      key={report.id}
-                      className="p-5 bg-gradient-to-r from-gray-50 to-blue-50/30 rounded-xl border border-gray-100 hover:shadow-md transition-all"
-                    >
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg">
-                            <Brain className="w-5 h-5 text-white" />
-                          </div>
-                          <div>
-                            <p className="text-sm text-gray-500">{report.date}</p>
-                            <p className="font-semibold text-gray-900 mt-1">Symptoms: {report.symptoms}</p>
-                          </div>
-                        </div>
-                        {getPriorityBadge(report.priority)}
-                      </div>
-                      <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                        <p className="text-sm font-semibold text-blue-900 mb-1">AI Suggestion:</p>
-                        <p className="text-gray-700 leading-relaxed">{report.aiSuggestion}</p>
-                      </div>
-                    </div>
-                  ))}
+                <div className="p-6 bg-gray-50 rounded-xl border border-gray-100 text-center">
+                  <Brain className="w-12 h-12 mx-auto text-gray-300 mb-3" />
+                  <p className="text-gray-600">AI-powered health insights will be displayed here.</p>
+                  <p className="text-sm text-gray-500 mt-2">Feature coming soon.</p>
                 </div>
               </TabsContent>
             </Tabs>

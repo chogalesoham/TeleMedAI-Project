@@ -19,11 +19,56 @@ interface TopbarProps {
 export const Topbar = ({ onMenuClick }: TopbarProps) => {
   const navigate = useNavigate();
 
+  // Get admin email from user object in localStorage
+  const getUserEmail = () => {
+    try {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        return user.email || 'admin@telemedai.com';
+      }
+    } catch (error) {
+      console.error('Error parsing user data:', error);
+    }
+    return 'admin@telemedai.com';
+  };
+
+  const getUserName = () => {
+    try {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        return user.name || 'Administrator';
+      }
+    } catch (error) {
+      console.error('Error parsing user data:', error);
+    }
+    return 'Administrator';
+  };
+
+  const adminEmail = getUserEmail();
+  const adminName = getUserName();
+
   const handleLogout = () => {
-    // Clear admin token
+    // Clear all authentication data
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    // Also clear legacy tokens
     localStorage.removeItem('admin_token');
+    localStorage.removeItem('admin_email');
+    
+    console.log('Admin logged out successfully');
+    
     // Redirect to admin login page
-    navigate('/admin-login');
+    navigate('/admin-login', { replace: true });
+  };
+
+  const handleProfileClick = () => {
+    navigate('/admin/settings');
+  };
+
+  const handleNotificationsClick = () => {
+    navigate('/admin/settings');
   };
   return (
     <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-lg border-b border-gray-200/50 shadow-sm">
@@ -94,26 +139,35 @@ export const Topbar = ({ onMenuClick }: TopbarProps) => {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="flex items-center gap-2 hover:bg-gray-100 rounded-xl px-2 sm:px-3">
                 <Avatar className="w-9 h-9 ring-2 ring-gray-200">
-                  <AvatarFallback className="bg-gradient-to-br from-blue-600 to-blue-700 text-white font-semibold">
-                    <User className="w-4 h-4" />
+                  <AvatarFallback className="bg-gradient-to-br from-blue-600 to-blue-700 text-white font-semibold text-xs">
+                    {adminName.split(' ').map(n => n[0]).join('').toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                <span className="hidden sm:inline-block font-semibold text-sm text-gray-700">Admin</span>
+                <div className="hidden sm:flex flex-col items-start">
+                  <span className="font-semibold text-sm text-gray-700">{adminName}</span>
+                  <span className="text-xs text-gray-500">{adminEmail}</span>
+                </div>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-64 shadow-xl border-gray-200/50">
               <DropdownMenuLabel>
                 <div className="flex flex-col space-y-1 px-1">
-                  <p className="text-sm font-bold text-gray-900">Administrator</p>
-                  <p className="text-xs text-gray-500 font-medium">admin@telemedai.com</p>
+                  <p className="text-sm font-bold text-gray-900">{adminName}</p>
+                  <p className="text-xs text-gray-500 font-medium">{adminEmail}</p>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="cursor-pointer hover:bg-gray-50">
+              <DropdownMenuItem 
+                className="cursor-pointer hover:bg-gray-50"
+                onClick={handleProfileClick}
+              >
                 <User className="w-4 h-4 mr-3 text-gray-500" />
                 <span className="font-medium">Profile</span>
               </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer hover:bg-gray-50">
+              <DropdownMenuItem 
+                className="cursor-pointer hover:bg-gray-50"
+                onClick={handleNotificationsClick}
+              >
                 <Bell className="w-4 h-4 mr-3 text-gray-500" />
                 <span className="font-medium">Notifications</span>
               </DropdownMenuItem>

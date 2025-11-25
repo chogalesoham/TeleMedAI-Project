@@ -4,6 +4,7 @@ const { authMiddleware } = require('../middleware/auth');
 const {
   patientSignup,
   patientLogin,
+  adminLogin,
   getCurrentUser,
   logout,
   changePassword,
@@ -23,6 +24,13 @@ router.post('/patient/signup', patientSignup);
  * @access  Public
  */
 router.post('/patient/login', patientLogin);
+
+/**
+ * @route   POST /api/auth/admin/login
+ * @desc    Login admin and return JWT token
+ * @access  Public
+ */
+router.post('/admin/login', adminLogin);
 
 /**
  * @route   GET /api/auth/me
