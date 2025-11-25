@@ -19,10 +19,11 @@ app.use(express.urlencoded({ extended: true }));
 const authRoutes = require('./routes/auth');
 const onboardingRoutes = require('./routes/onboarding');
 const adminRoutes = require('./routes/admin');
-
+const reportRoutes = require('./routes/report');
 app.use('/api/auth', authRoutes);
 app.use('/api/patient/onboarding', onboardingRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/reports', reportRoutes);
 
 // Start Server
 app.listen(PORT, () => {
