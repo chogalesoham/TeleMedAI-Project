@@ -22,6 +22,8 @@ const doctorOnboardingRoutes = require('./routes/doctorOnboarding');
 const adminRoutes = require('./routes/admin');
 const reportRoutes = require('./routes/report');
 const patientRoutes = require('./routes/patient');
+const appointmentRoutes = require('./routes/appointment');
+const notificationRoutes = require('./routes/notification');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/patient/onboarding', onboardingRoutes);
@@ -29,6 +31,8 @@ app.use('/api/patient', patientRoutes);
 app.use('/api/doctor/onboarding', doctorOnboardingRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/appointments', appointmentRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Start Server
 app.listen(PORT, () => {

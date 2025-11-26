@@ -50,6 +50,9 @@ const navigation: NavItem[] = [
   { name: 'Symptom Intake', path: '/patient-dashboard/symptom-intake', icon: Activity },
   { name: 'Pre-Diagnosis', path: '/patient-dashboard/pre-diagnosis', icon: FileText },
   { name: 'Doctor Selection', path: '/patient-dashboard/doctor-selection', icon: Stethoscope },
+  { name: 'My Appointments', path: '/patient-dashboard/my-appointments', icon: Calendar },
+  { name: 'Upcoming', path: '/patient-dashboard/upcoming-appointments', icon: ClipboardCheck },
+  { name: 'Past Appointments', path: '/patient-dashboard/past-appointments', icon: FileText },
   { name: 'Live Consultation', path: '/patient-dashboard/live-consultation', icon: Video },
   { name: 'Medications', path: '/patient-dashboard/medications', icon: Pill },
   { name: 'Report Upload', path: '/patient-dashboard/report-upload', icon: Upload },
@@ -162,10 +165,10 @@ const PatientDashboardLayout = () => {
                     <AvatarFallback className="text-xs sm:text-sm">
                       {userData?.name
                         ? userData.name
-                            .split(' ')
-                            .map((n) => n[0])
-                            .join('')
-                            .toUpperCase()
+                          .split(' ')
+                          .map((n) => n[0])
+                          .join('')
+                          .toUpperCase()
                         : 'U'}
                     </AvatarFallback>
                   </Avatar>
@@ -243,14 +246,14 @@ const PatientDashboardLayout = () => {
         <div className="flex items-center justify-between p-4 border-b border-gray-100">
           {!sidebarCollapsed && (
             <div className="flex items-center gap-3">
-              
+
               <div className="flex flex-col">
                 <span className="text-sm font-bold text-gray-900">Patient Portal</span>
                 <span className="text-xs text-gray-500">Health Dashboard</span>
               </div>
             </div>
           )}
-          
+
           {/* Desktop Collapse Toggle Button - Enhanced Attractive Design */}
           <Button
             variant="ghost"
@@ -258,8 +261,8 @@ const PatientDashboardLayout = () => {
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
             className={`
               hidden lg:flex h-10 w-10 rounded-full transition-all duration-300 flex-shrink-0
-              ${sidebarCollapsed 
-                ? 'bg-gradient-to-br from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 shadow-lg hover:shadow-xl' 
+              ${sidebarCollapsed
+                ? 'bg-gradient-to-br from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 shadow-lg hover:shadow-xl'
                 : 'bg-gradient-to-br from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 shadow-md hover:shadow-lg'
               }
               hover:scale-110 active:scale-95
@@ -272,7 +275,7 @@ const PatientDashboardLayout = () => {
               <ChevronLeft className="h-5 w-5 text-gray-700 font-bold" />
             )}
           </Button>
-      
+
         </div>
 
         <nav className="p-4 space-y-1">
@@ -287,10 +290,9 @@ const PatientDashboardLayout = () => {
                 onClick={() => setSidebarOpen(false)}
                 className={`
                   flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200
-                  ${
-                    active
-                      ? 'bg-blue-50 text-blue-700 font-medium'
-                      : 'text-gray-700 hover:bg-gray-50'
+                  ${active
+                    ? 'bg-blue-50 text-blue-700 font-medium'
+                    : 'text-gray-700 hover:bg-gray-50'
                   }
                   ${sidebarCollapsed ? 'lg:justify-center' : ''}
                 `}
@@ -307,7 +309,7 @@ const PatientDashboardLayout = () => {
       </aside>
 
       {/* Main Content */}
-      <main 
+      <main
         className={`
           pt-14 sm:pt-16 min-h-screen transition-all duration-300 ease-in-out
           ${sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'}
