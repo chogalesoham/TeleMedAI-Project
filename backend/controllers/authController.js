@@ -64,7 +64,7 @@ const patientSignup = async (req, res) => {
 
   } catch (error) {
     console.error('Signup error:', error);
-    
+
     // Handle duplicate key error
     if (error.code === 11000) {
       return res.status(400).json({
@@ -72,7 +72,7 @@ const patientSignup = async (req, res) => {
         message: 'Email already exists'
       });
     }
-    
+
     // Handle validation errors
     if (error.name === 'ValidationError') {
       const messages = Object.values(error.errors).map(err => err.message);
@@ -109,7 +109,7 @@ const patientLogin = async (req, res) => {
 
     // Find user by email (include password field)
     const user = await User.findOne({ email, role: 'patient' }).select('+password');
-    
+
     if (!user) {
       return res.status(401).json({
         success: false,
@@ -127,7 +127,7 @@ const patientLogin = async (req, res) => {
 
     // Verify password
     const isPasswordCorrect = await user.comparePassword(password);
-    
+
     if (!isPasswordCorrect) {
       return res.status(401).json({
         success: false,
@@ -183,7 +183,7 @@ const getCurrentUser = async (req, res) => {
     const userId = req.user.userId;
 
     const user = await User.findById(userId);
-    
+
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -221,7 +221,7 @@ const logout = async (req, res) => {
   try {
     // In a stateless JWT system, logout is handled client-side by removing the token
     // You can add token blacklisting here if needed
-    
+
     return res.status(200).json({
       success: true,
       message: 'Logout successful'
@@ -261,7 +261,7 @@ const changePassword = async (req, res) => {
 
     // Find user with password
     const user = await User.findById(userId).select('+password');
-    
+
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -271,7 +271,7 @@ const changePassword = async (req, res) => {
 
     // Verify current password
     const isPasswordCorrect = await user.comparePassword(currentPassword);
-    
+
     if (!isPasswordCorrect) {
       return res.status(401).json({
         success: false,
@@ -316,7 +316,7 @@ const updateProfile = async (req, res) => {
 
     // Find user
     const user = await User.findById(userId);
-    
+
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -345,7 +345,7 @@ const updateProfile = async (req, res) => {
 
   } catch (error) {
     console.error('Update profile error:', error);
-    
+
     // Handle validation errors
     if (error.name === 'ValidationError') {
       const messages = Object.values(error.errors).map(err => err.message);
@@ -382,7 +382,7 @@ const adminLogin = async (req, res) => {
 
     // Find admin user by email (include password field)
     const user = await User.findOne({ email, role: 'admin' }).select('+password');
-    
+
     if (!user) {
       return res.status(401).json({
         success: false,
@@ -400,7 +400,7 @@ const adminLogin = async (req, res) => {
 
     // Verify password
     const isPasswordCorrect = await user.comparePassword(password);
-    
+
     if (!isPasswordCorrect) {
       return res.status(401).json({
         success: false,
@@ -436,10 +436,210 @@ const adminLogin = async (req, res) => {
   }
 };
 
+/**
+ * Doctor Signup
+ * POST /api/auth/doctor/signup
+ */
+const doctorSignup = async (req, res) => {
+  try {
+    const {
+      name,
+      email,
+      password,
+      phone,
+      dateOfBirth,
+      gender,
+      location
+    } = req.body;
+
+    // Validation
+    if (!name || !email || !password || !phone || !dateOfBirth || !gender) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide all required fields: name, email, password, phone, dateOfBirth, gender'
+      });
+    }
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: 'User with this email already exists'
+      });
+    }
+
+    // Create new doctor user
+    const user = new User({
+      name,
+      email,
+      password, // Will be hashed by pre-save hook
+      phone,
+      dateOfBirth,
+      gender,
+      location: location || {},
+      role: 'doctor',
+      onboardingCompleted: false
+    });
+
+    await user.save();
+
+    // Generate JWT token
+    const token = user.generateAuthToken();
+
+    // Return user data and token
+    return res.status(201).json({
+      success: true,
+      message: 'Doctor account created successfully',
+      data: {
+        token,
+        user: user.getPublicProfile()
+      }
+    });
+
+  } catch (error) {
+    console.error('Doctor signup error:', error);
+
+    // Handle duplicate key error
+    if (error.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email already exists'
+      });
+    }
+
+    // Handle validation errors
+    if (error.name === 'ValidationError') {
+      const messages = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: messages
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to create account. Please try again.',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Doctor Login
+ * POST /api/auth/doctor/login
+ */
+const doctorLogin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // Validation
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide email and password'
+      });
+    }
+
+    // Find user by email (include password field)
+    const user = await User.findOne({ email, role: 'doctor' }).select('+password');
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid email or password'
+      });
+    }
+
+    // Verify password first
+    const isPasswordCorrect = await user.comparePassword(password);
+
+    if (!isPasswordCorrect) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid email or password'
+      });
+    }
+
+    // Check if account is active
+    if (!user.isActive) {
+      return res.status(403).json({
+        success: false,
+        message: 'Your account has been deactivated. Please contact support.'
+      });
+    }
+
+    // Check approval status
+    if (user.approvalStatus === 'pending') {
+      return res.status(403).json({
+        success: false,
+        message: 'Your account is pending admin approval. You will be notified once approved.',
+        approvalStatus: 'pending'
+      });
+    }
+
+    if (user.approvalStatus === 'rejected') {
+      return res.status(403).json({
+        success: false,
+        message: user.rejectionReason || 'Your account has been rejected. Please contact support for more information.',
+        approvalStatus: 'rejected'
+      });
+    }
+
+    if (!user.isApproved) {
+      return res.status(403).json({
+        success: false,
+        message: 'Your account is not approved. Please contact support.'
+      });
+    }
+
+    // Update last login
+    user.lastLogin = new Date();
+    await user.save();
+
+    // Generate JWT token
+    const token = user.generateAuthToken();
+
+    // Check onboarding status
+    const DoctorOnboarding = require('../models/DoctorOnboarding');
+    const onboarding = await DoctorOnboarding.findOne({ userId: user._id });
+    const onboardingCompleted = onboarding ? onboarding.onboardingProgress.isCompleted : false;
+
+    // Update user onboarding status if needed
+    if (onboardingCompleted && !user.onboardingCompleted) {
+      user.onboardingCompleted = true;
+      await user.save();
+    }
+
+    // Return user data, token, and onboarding status
+    return res.status(200).json({
+      success: true,
+      message: 'Login successful',
+      data: {
+        token,
+        user: user.getPublicProfile(),
+        onboardingCompleted,
+        redirectTo: onboardingCompleted ? '/doctor-dashboard' : '/doctor-onboarding'
+      }
+    });
+
+  } catch (error) {
+    console.error('Doctor login error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Login failed. Please try again.',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   patientSignup,
   patientLogin,
   adminLogin,
+  doctorSignup,
+  doctorLogin,
   getCurrentUser,
   logout,
   changePassword,

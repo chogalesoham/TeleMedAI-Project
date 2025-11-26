@@ -22,3 +22,4 @@ export { PatientDetails } from './pages/PatientDetails';
 export { Appointments } from './pages/Appointments';
 export { Revenue } from './pages/Revenue';
 export { Settings } from './pages/Settings';
+export { default as PendingDoctors } from './pages/PendingDoctors';

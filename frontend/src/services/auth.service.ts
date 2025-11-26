@@ -51,13 +51,13 @@ export const patientSignup = async (data: SignupData): Promise<AuthResponse> => 
       `${API_URL}/auth/patient/signup`,
       data
     );
-    
+
     // Store token if signup successful
     if (response.data.success && response.data.data?.token) {
       localStorage.setItem('token', response.data.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.data.user));
     }
-    
+
     return response.data;
   } catch (error: any) {
     console.error('Signup error:', error);
@@ -74,13 +74,13 @@ export const patientLogin = async (data: LoginData): Promise<AuthResponse> => {
       `${API_URL}/auth/patient/login`,
       data
     );
-    
+
     // Store token and user data if login successful
     if (response.data.success && response.data.data?.token) {
       localStorage.setItem('token', response.data.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.data.user));
     }
-    
+
     return response.data;
   } catch (error: any) {
     console.error('Login error:', error);
@@ -97,17 +97,63 @@ export const adminLogin = async (data: LoginData): Promise<AuthResponse> => {
       `${API_URL}/auth/admin/login`,
       data
     );
-    
+
     // Store token and user data if login successful
     if (response.data.success && response.data.data?.token) {
       localStorage.setItem('token', response.data.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.data.user));
     }
-    
+
     return response.data;
   } catch (error: any) {
     console.error('Admin login error:', error);
     throw new Error(error.response?.data?.message || 'Admin login failed. Please try again.');
+  }
+};
+
+/**
+ * Doctor Signup
+ */
+export const doctorSignup = async (data: SignupData): Promise<AuthResponse> => {
+  try {
+    const response = await axios.post<AuthResponse>(
+      `${API_URL}/auth/doctor/signup`,
+      data
+    );
+
+    // Store token if signup successful
+    if (response.data.success && response.data.data?.token) {
+      localStorage.setItem('token', response.data.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.data.user));
+    }
+
+    return response.data;
+  } catch (error: any) {
+    console.error('Doctor signup error:', error);
+    throw new Error(error.response?.data?.message || 'Doctor signup failed. Please try again.');
+  }
+};
+
+/**
+ * Doctor Login
+ */
+export const doctorLogin = async (data: LoginData): Promise<AuthResponse> => {
+  try {
+    const response = await axios.post<AuthResponse>(
+      `${API_URL}/auth/doctor/login`,
+      data
+    );
+
+    // Store token and user data if login successful
+    if (response.data.success && response.data.data?.token) {
+      localStorage.setItem('token', response.data.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.data.user));
+    }
+
+    return response.data;
+  } catch (error: any) {
+    console.error('Doctor login error:', error);
+    throw new Error(error.response?.data?.message || 'Doctor login failed. Please try again.');
   }
 };
 
@@ -120,12 +166,12 @@ export const getCurrentUser = async () => {
       `${API_URL}/auth/me`,
       { headers: getAuthHeader() }
     );
-    
+
     // Update localStorage with fresh user data
     if (response.data?.success && response.data?.data?.user) {
       localStorage.setItem('user', JSON.stringify(response.data.data.user));
     }
-    
+
     return response.data;
   } catch (error: any) {
     console.error('Get current user error:', error);
@@ -143,11 +189,11 @@ export const logout = async () => {
       {},
       { headers: getAuthHeader() }
     );
-    
+
     // Clear local storage
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    
+
     return { success: true };
   } catch (error: any) {
     console.error('Logout error:', error);
@@ -200,12 +246,12 @@ export const updateProfile = async (profileData: any) => {
       profileData,
       { headers: getAuthHeader() }
     );
-    
+
     // Update localStorage with new user data
     if (response.data?.success && response.data?.data?.user) {
       localStorage.setItem('user', JSON.stringify(response.data.data.user));
     }
-    
+
     return response.data;
   } catch (error: any) {
     console.error('Update profile error:', error);

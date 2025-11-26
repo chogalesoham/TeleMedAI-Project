@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
 import { Input } from '@/components/shared';
 import { Button } from '@/components/ui/button';
-import { Mail, Lock, Stethoscope, ArrowRight, Award, Users, TrendingUp, Shield, CheckCircle2 } from 'lucide-react';
+import { Mail, Lock, Stethoscope, ArrowRight, Award, Users, Shield, CheckCircle2, AlertCircle } from 'lucide-react';
 import { authAnimations } from '@/constants/authAnimations';
 
 export const DoctorLogin = () => {
@@ -19,8 +19,8 @@ export const DoctorLogin = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
-    // Enhanced validation
+
+    // Basic validation - don't reveal password requirements
     const newErrors: Record<string, string> = {};
     if (!formData.email) {
       newErrors.email = 'Email is required';
@@ -29,28 +29,42 @@ export const DoctorLogin = () => {
     }
     if (!formData.password) {
       newErrors.password = 'Password is required';
-    } else if (formData.password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters';
     }
-    
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       setIsLoading(false);
       return;
     }
 
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      // Import the doctor login service
+      const { doctorLogin } = await import('@/services/auth.service');
+
+      const response = await doctorLogin({
+        email: formData.email,
+        password: formData.password
+      });
+
+      if (response.success && response.data) {
+        // Navigate based on onboarding status
+        const redirectTo = response.data.redirectTo || '/doctor-dashboard';
+        navigate(redirectTo);
+      }
+    } catch (error: any) {
+      // Display error message from API - backend handles all validation
+      const errorMessage = error.response?.data?.message || error.message || 'Invalid credentials. Please try again.';
+      setErrors({ general: errorMessage });
+    } finally {
       setIsLoading(false);
-      navigate('/doctor-dashboard');
-    }, 1500);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
-    setFormData({ 
-      ...formData, 
-      [name]: type === 'checkbox' ? checked : value 
+    setFormData({
+      ...formData,
+      [name]: type === 'checkbox' ? checked : value
     });
     if (errors[name]) {
       setErrors({ ...errors, [name]: '' });
@@ -92,9 +106,9 @@ export const DoctorLogin = () => {
                 TeleMed<span className="bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">AI</span>
               </span>
             </Link>
-            
+
             {/* Badge */}
-            <motion.div 
+            <motion.div
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-purple-500/10 to-indigo-500/10 border border-purple-200/50 backdrop-blur-sm"
               whileHover={{ scale: 1.05 }}
               transition={{ type: "spring", stiffness: 300 }}
@@ -102,7 +116,7 @@ export const DoctorLogin = () => {
               <Stethoscope className="w-5 h-5 text-purple-600" />
               <span className="text-sm font-semibold text-purple-700">Doctor Portal</span>
             </motion.div>
-            
+
             {/* Heading */}
             <div className="space-y-4">
               <h1 className="text-5xl lg:text-6xl font-bold leading-tight">
@@ -111,7 +125,7 @@ export const DoctorLogin = () => {
                   Doctor
                 </span>
               </h1>
-              
+
               <p className="text-xl text-gray-600 leading-relaxed">
                 Access your practice dashboard, manage appointments, and provide exceptional care with AI assistance.
               </p>
@@ -168,6 +182,16 @@ export const DoctorLogin = () => {
                 </p>
               </div>
 
+              {/* Error Alert */}
+              {errors.general && (
+                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-red-800">{errors.general}</p>
+                  </div>
+                </div>
+              )}
+
               {/* Login Form */}
               <form onSubmit={handleSubmit} className="space-y-6">
                 <Input
@@ -196,8 +220,8 @@ export const DoctorLogin = () => {
 
                 <div className="flex items-center justify-between">
                   <label className="flex items-center gap-2 cursor-pointer group">
-                    <input 
-                      type="checkbox" 
+                    <input
+                      type="checkbox"
                       name="rememberMe"
                       checked={formData.rememberMe}
                       onChange={handleChange}
@@ -205,8 +229,8 @@ export const DoctorLogin = () => {
                     />
                     <span className="text-sm text-gray-700 group-hover:text-gray-900">Remember me</span>
                   </label>
-                  <Link 
-                    to="/forgot-password" 
+                  <Link
+                    to="/forgot-password"
                     className="text-sm font-medium text-purple-600 hover:text-purple-600/80 transition-colors"
                   >
                     Forgot password?
@@ -241,9 +265,9 @@ export const DoctorLogin = () => {
                   <div className="flex items-start gap-3">
                     <Shield className="w-5 h-5 text-purple-600 flex-shrink-0 mt-0.5" />
                     <div className="text-sm">
-                      <p className="font-semibold text-purple-900 mb-1">Professional Verification</p>
+                      <p className="font-semibold text-purple-900 mb-1">Admin Approval Required</p>
                       <p className="text-purple-700">
-                        All accounts are verified with medical license credentials for patient safety.
+                        All doctor accounts require admin approval before access is granted.
                       </p>
                     </div>
                   </div>
@@ -254,8 +278,8 @@ export const DoctorLogin = () => {
               <div className="mt-8 text-center">
                 <p className="text-gray-600">
                   Not registered yet?{' '}
-                  <Link 
-                    to="/doctor-signup" 
+                  <Link
+                    to="/doctor-signup"
                     className="font-semibold text-purple-600 hover:text-purple-600/80 transition-colors"
                   >
                     Apply now

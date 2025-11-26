@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
@@ -12,14 +12,10 @@ import {
   CheckCircle,
   Calendar,
   DollarSign,
-  GraduationCap,
-  Building2,
-  Mail,
-  Phone,
   Shield,
-  Users,
   Briefcase,
   MessageSquare,
+  Loader2,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -27,74 +23,86 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { mockDoctors } from '../data/mockData';
+import PatientService from '@/services/patient.service';
+import { toast } from 'sonner';
+
+interface Doctor {
+  id: string;
+  name: string;
+  profilePicture: string;
+  specialties: string[];
+  languages: string[];
+  consultationModes: string[];
+  consultationFee: {
+    currency: string;
+    amount: number;
+    mode: string;
+  };
+  shortBio: string;
+  rating: number;
+  reviewCount: number;
+  experience: number;
+  availability: any[];
+  registrationNumber: string;
+  registrationCouncil: string;
+}
 
 export const DoctorProfile = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const doctor = mockDoctors.find((d) => d.id === id) || mockDoctors[0];
-
+  const [doctor, setDoctor] = useState<Doctor | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
 
-  // Mock data for additional details
-  const education = [
-    { degree: 'MD, Cardiology', institution: 'Harvard Medical School', year: '2008' },
-    { degree: 'MBBS', institution: 'Johns Hopkins University', year: '2005' },
-  ];
+  useEffect(() => {
+    if (id) {
+      fetchDoctorDetails();
+    }
+  }, [id]);
 
-  const certifications = [
-    'Board Certified in Cardiology',
-    'Fellow of American College of Cardiology',
-    'Advanced Cardiac Life Support (ACLS)',
-    'Nuclear Cardiology Certification',
-  ];
-
-  const specializations = [
-    'Coronary Artery Disease',
-    'Heart Failure Management',
-    'Preventive Cardiology',
-    'Cardiac Imaging',
-  ];
-
-  const workingHours = [
-    { day: 'Monday', hours: '9:00 AM - 5:00 PM' },
-    { day: 'Tuesday', hours: '10:00 AM - 6:00 PM' },
-    { day: 'Wednesday', hours: '9:00 AM - 5:00 PM' },
-    { day: 'Thursday', hours: '10:00 AM - 6:00 PM' },
-    { day: 'Friday', hours: '9:00 AM - 4:00 PM' },
-    { day: 'Saturday', hours: 'Closed' },
-    { day: 'Sunday', hours: 'Closed' },
-  ];
-
-  const reviews = [
-    {
-      id: '1',
-      patientName: 'John D.',
-      rating: 5,
-      date: '2024-11-15',
-      comment: 'Excellent doctor! Very thorough and caring. Took time to explain everything.',
-    },
-    {
-      id: '2',
-      patientName: 'Sarah M.',
-      rating: 5,
-      date: '2024-11-10',
-      comment: 'Highly recommend! Professional and knowledgeable. Made me feel comfortable.',
-    },
-    {
-      id: '3',
-      patientName: 'Michael R.',
-      rating: 4,
-      date: '2024-11-05',
-      comment: 'Great experience. Wait time was a bit long but worth it for quality care.',
-    },
-  ];
+  const fetchDoctorDetails = async () => {
+    setIsLoading(true);
+    try {
+      const response = await PatientService.getDoctorById(id!);
+      if (response.success && response.data) {
+        setDoctor(response.data);
+      } else {
+        toast.error(response.error || 'Failed to load doctor details');
+        navigate('/patient-dashboard/doctor-selection');
+      }
+    } catch (error) {
+      console.error('Error fetching doctor:', error);
+      toast.error('Failed to load doctor details');
+      navigate('/patient-dashboard/doctor-selection');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleBookAppointment = () => {
     navigate(`/patient-dashboard/appointment-booking`, {
       state: { doctor },
     });
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!doctor) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-gray-600">Doctor not found</p>
+        <Button onClick={() => navigate('/patient-dashboard/doctor-selection')} className="mt-4">
+          Back to Doctor Selection
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -124,10 +132,9 @@ export const DoctorProfile = () => {
             <CardContent className="p-4 sm:p-6">
               <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
                 <Avatar className="w-24 h-24 sm:w-32 sm:h-32 mx-auto sm:mx-0">
-                  <AvatarImage src={doctor.image} />
+                  <AvatarImage src={doctor.profilePicture} />
                   <AvatarFallback className="text-2xl">
-                    {doctor.name[4]}
-                    {doctor.name.split(' ')[1]?.[0]}
+                    {doctor.name.split(' ').map(n => n[0]).join('')}
                   </AvatarFallback>
                 </Avatar>
 
@@ -138,12 +145,10 @@ export const DoctorProfile = () => {
                         <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
                           {doctor.name}
                         </h2>
-                        {doctor.verified && (
-                          <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
-                        )}
+                        <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
                       </div>
                       <p className="text-base sm:text-lg text-primary font-medium">
-                        {doctor.specialization}
+                        {doctor.specialties[0] || 'General Practice'}
                       </p>
                     </div>
                   </div>
@@ -164,13 +169,13 @@ export const DoctorProfile = () => {
                   </div>
 
                   <div className="flex flex-wrap gap-2 mt-4 justify-center sm:justify-start">
-                    {doctor.consultationTypes.includes('video') && (
+                    {doctor.consultationModes.includes('tele') && (
                       <Badge variant="secondary">
                         <Video className="w-3 h-3 mr-1" />
                         Video Consult
                       </Badge>
                     )}
-                    {doctor.consultationTypes.includes('in-person') && (
+                    {doctor.consultationModes.includes('in_person') && (
                       <Badge variant="secondary">
                         <MapPin className="w-3 h-3 mr-1" />
                         In-Person
@@ -190,10 +195,9 @@ export const DoctorProfile = () => {
           <Card>
             <CardContent className="p-4 sm:p-6">
               <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid w-full grid-cols-3">
+                <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="overview">Overview</TabsTrigger>
                   <TabsTrigger value="experience">Experience</TabsTrigger>
-                  <TabsTrigger value="reviews">Reviews</TabsTrigger>
                 </TabsList>
 
                 {/* Overview Tab */}
@@ -204,10 +208,7 @@ export const DoctorProfile = () => {
                       About
                     </h3>
                     <p className="text-gray-600 leading-relaxed">
-                      {doctor.name} is a highly experienced {doctor.specialization.toLowerCase()} with
-                      over {doctor.experience} years of practice. Known for providing compassionate care
-                      and staying updated with the latest medical advances. Specializes in treating
-                      complex cases and helping patients achieve optimal health outcomes.
+                      {doctor.shortBio || `${doctor.name} is a highly experienced ${doctor.specialties[0]?.toLowerCase() || 'healthcare professional'} with over ${doctor.experience} years of practice. Known for providing compassionate care and staying updated with the latest medical advances.`}
                     </p>
                   </div>
 
@@ -215,11 +216,11 @@ export const DoctorProfile = () => {
 
                   <div>
                     <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
-                      <Building2 className="w-5 h-5" />
+                      <Shield className="w-5 h-5" />
                       Specializations
                     </h3>
                     <div className="flex flex-wrap gap-2">
-                      {specializations.map((spec, index) => (
+                      {doctor.specialties.map((spec, index) => (
                         <Badge key={index} variant="outline">
                           {spec}
                         </Badge>
@@ -247,27 +248,18 @@ export const DoctorProfile = () => {
 
                   <div>
                     <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
-                      <Clock className="w-5 h-5" />
-                      Working Hours
+                      <Shield className="w-5 h-5" />
+                      Registration Details
                     </h3>
-                    <div className="space-y-2">
-                      {workingHours.map((schedule, index) => (
-                        <div
-                          key={index}
-                          className="flex justify-between items-center py-2 border-b last:border-0"
-                        >
-                          <span className="text-gray-700 font-medium">{schedule.day}</span>
-                          <span
-                            className={
-                              schedule.hours === 'Closed'
-                                ? 'text-red-600 font-medium'
-                                : 'text-gray-600'
-                            }
-                          >
-                            {schedule.hours}
-                          </span>
-                        </div>
-                      ))}
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Registration Number:</span>
+                        <span className="font-medium">{doctor.registrationNumber}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Council:</span>
+                        <span className="font-medium">{doctor.registrationCouncil}</span>
+                      </div>
                     </div>
                   </div>
                 </TabsContent>
@@ -276,113 +268,41 @@ export const DoctorProfile = () => {
                 <TabsContent value="experience" className="space-y-4 mt-4">
                   <div>
                     <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
-                      <GraduationCap className="w-5 h-5" />
-                      Education
+                      <Award className="w-5 h-5" />
+                      Professional Experience
                     </h3>
-                    <div className="space-y-4">
-                      {education.map((edu, index) => (
-                        <div key={index} className="flex gap-4">
-                          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                            <GraduationCap className="w-6 h-6 text-primary" />
-                          </div>
-                          <div>
-                            <h4 className="font-semibold text-gray-900">{edu.degree}</h4>
-                            <p className="text-gray-600">{edu.institution}</p>
-                            <p className="text-sm text-gray-500">{edu.year}</p>
-                          </div>
+                    <div className="space-y-3">
+                      <div className="p-4 bg-gray-50 rounded-lg">
+                        <p className="font-medium text-gray-900">{doctor.experience} Years of Practice</p>
+                        <p className="text-sm text-gray-600 mt-1">
+                          Specialized in {doctor.specialties.join(', ')}
+                        </p>
+                      </div>
+                      <div className="p-4 bg-gray-50 rounded-lg">
+                        <p className="font-medium text-gray-900">Verified Professional</p>
+                        <p className="text-sm text-gray-600 mt-1">
+                          Registered with {doctor.registrationCouncil}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <div>
+                    <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
+                      <CheckCircle className="w-5 h-5" />
+                      Consultation Modes
+                    </h3>
+                    <div className="space-y-2">
+                      {doctor.consultationModes.map((mode, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                          <CheckCircle className="w-4 h-4 text-green-600" />
+                          <span className="text-gray-700 capitalize">{mode.replace('_', ' ')}</span>
                         </div>
                       ))}
                     </div>
                   </div>
-
-                  <Separator />
-
-                  <div>
-                    <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
-                      <Shield className="w-5 h-5" />
-                      Certifications
-                    </h3>
-                    <ul className="space-y-2">
-                      {certifications.map((cert, index) => (
-                        <li key={index} className="flex items-start gap-2">
-                          <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                          <span className="text-gray-700">{cert}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <Separator />
-
-                  <div>
-                    <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
-                      <Users className="w-5 h-5" />
-                      Experience Highlights
-                    </h3>
-                    <ul className="space-y-2 text-gray-600">
-                      <li className="flex items-start gap-2">
-                        <span className="text-primary">•</span>
-                        Treated over 5,000+ patients successfully
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-primary">•</span>
-                        Published research in leading medical journals
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-primary">•</span>
-                        Regular speaker at medical conferences
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <span className="text-primary">•</span>
-                        Mentor to young medical professionals
-                      </li>
-                    </ul>
-                  </div>
-                </TabsContent>
-
-                {/* Reviews Tab */}
-                <TabsContent value="reviews" className="space-y-4 mt-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-semibold text-lg flex items-center gap-2">
-                      <MessageSquare className="w-5 h-5" />
-                      Patient Reviews
-                    </h3>
-                    <div className="flex items-center gap-2">
-                      <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                      <span className="font-bold text-xl">{doctor.rating}</span>
-                      <span className="text-gray-600">/ 5</span>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    {reviews.map((review) => (
-                      <Card key={review.id}>
-                        <CardContent className="p-4">
-                          <div className="flex justify-between items-start mb-2">
-                            <div>
-                              <p className="font-semibold text-gray-900">
-                                {review.patientName}
-                              </p>
-                              <p className="text-sm text-gray-500">{review.date}</p>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              {Array.from({ length: review.rating }).map((_, i) => (
-                                <Star
-                                  key={i}
-                                  className="w-4 h-4 fill-yellow-400 text-yellow-400"
-                                />
-                              ))}
-                            </div>
-                          </div>
-                          <p className="text-gray-600">{review.comment}</p>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-
-                  <Button variant="outline" className="w-full">
-                    View All Reviews ({doctor.reviewCount})
-                  </Button>
                 </TabsContent>
               </Tabs>
             </CardContent>
@@ -403,26 +323,26 @@ export const DoctorProfile = () => {
                   <DollarSign className="w-5 h-5 text-primary" />
                 </div>
                 <p className="text-3xl font-bold text-primary mt-1">
-                  ${doctor.consultationFee}
+                  {doctor.consultationFee.currency} {doctor.consultationFee.amount}
                 </p>
-                <p className="text-sm text-gray-500 mt-1">Per session</p>
+                <p className="text-sm text-gray-500 mt-1">Per {doctor.consultationFee.mode.replace('_', ' ')}</p>
               </div>
 
               {/* Quick Info */}
               <div className="space-y-3">
                 <div className="flex items-center gap-3 text-sm">
-                  <MapPin className="w-4 h-4 text-gray-400" />
-                  <span className="text-gray-600">{doctor.location}</span>
+                  <Languages className="w-4 h-4 text-gray-400" />
+                  <span className="text-gray-600">{doctor.languages.join(', ')}</span>
                 </div>
                 <div className="flex items-center gap-3 text-sm">
                   <Clock className="w-4 h-4 text-gray-400" />
                   <span className="text-gray-600">
-                    Available: {doctor.availability.join(', ')}
+                    {doctor.availability.length > 0 ? 'Available' : 'Check availability'}
                   </span>
                 </div>
                 <div className="flex items-center gap-3 text-sm">
-                  <Calendar className="w-4 h-4 text-gray-400" />
-                  <span className="text-gray-600">Next available today</span>
+                  <Shield className="w-4 h-4 text-gray-400" />
+                  <span className="text-gray-600">Verified Professional</span>
                 </div>
               </div>
 

@@ -37,6 +37,7 @@ async def transcribe_audio(audio_file) -> str:
         print(f"Error during transcription: {e}")
         return None
 
+
 def generate_consultation_summary(transcription: str) -> ConsultationSummary | None:
     """Generate structured summary from transcription"""
     try:
@@ -106,3 +107,4 @@ async def process_consultation(audio_file) -> dict:
         "transcription" : transcription,
         "summary" : summary.dict()
     }
+

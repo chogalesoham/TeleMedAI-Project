@@ -42,14 +42,14 @@ const userSchema = new mongoose.Schema({
     country: String,
     zipCode: String
   },
-  
+
   // User Role
   role: {
     type: String,
     enum: ['patient', 'doctor', 'admin'],
     default: 'patient'
   },
-  
+
   // Account Status
   isActive: {
     type: Boolean,
@@ -59,19 +59,46 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
-  
+
   // Onboarding Status
   onboardingCompleted: {
     type: Boolean,
     default: false
   },
-  
+
+  // Doctor Approval Status (for admin approval)
+  isApproved: {
+    type: Boolean,
+    default: function () {
+      // Auto-approve patients and admins, require approval for doctors
+      return this.role !== 'doctor';
+    }
+  },
+  approvalStatus: {
+    type: String,
+    enum: ['pending', 'approved', 'rejected'],
+    default: function () {
+      return this.role === 'doctor' ? 'pending' : 'approved';
+    }
+  },
+  approvedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  approvedAt: {
+    type: Date
+  },
+  rejectionReason: {
+    type: String,
+    default: ''
+  },
+
   // Profile Picture
   profilePicture: {
     type: String,
     default: ''
   },
-  
+
   // Metadata
   lastLogin: {
     type: Date
@@ -89,16 +116,16 @@ const userSchema = new mongoose.Schema({
 });
 
 // Hash password before saving
-userSchema.pre('save', async function(next) {
+userSchema.pre('save', async function (next) {
   // Only hash the password if it has been modified (or is new)
   if (!this.isModified('password')) {
     return next();
   }
-  
+
   try {
     // Generate salt
     const salt = await bcrypt.genSalt(10);
-    
+
     // Hash password
     this.password = await bcrypt.hash(this.password, salt);
     next();
@@ -108,7 +135,7 @@ userSchema.pre('save', async function(next) {
 });
 
 // Method to compare password for login
-userSchema.methods.comparePassword = async function(candidatePassword) {
+userSchema.methods.comparePassword = async function (candidatePassword) {
   try {
     return await bcrypt.compare(candidatePassword, this.password);
   } catch (error) {
@@ -117,9 +144,9 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
 };
 
 // Method to generate JWT token
-userSchema.methods.generateAuthToken = function() {
+userSchema.methods.generateAuthToken = function () {
   const jwt = require('jsonwebtoken');
-  
+
   const token = jwt.sign(
     {
       userId: this._id,
@@ -132,12 +159,12 @@ userSchema.methods.generateAuthToken = function() {
       expiresIn: process.env.JWT_EXPIRE || '7d'
     }
   );
-  
+
   return token;
 };
 
 // Method to get public profile (without sensitive data)
-userSchema.methods.getPublicProfile = function() {
+userSchema.methods.getPublicProfile = function () {
   return {
     id: this._id,
     name: this.name,

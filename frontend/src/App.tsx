@@ -16,8 +16,8 @@ import { AdminProtectedRoute, AdminLoginRedirect } from "@/components/auth/Admin
 import { Landing } from "@/features/landing";
 import { PatientLogin, PatientSignup, DoctorLogin, DoctorSignup } from "@/features/auth";
 import { PatientDashboard } from "@/features/patient";
-import { 
-  DoctorDashboard, 
+import {
+  DoctorDashboard,
   DoctorPatientQueue,
   Appointments,
   Reports,
@@ -50,6 +50,9 @@ import {
 // Patient Onboarding
 import { PatientOnboarding, OnboardingComplete } from "@/features/patient/pages/onboarding";
 
+// Doctor Onboarding
+import DoctorOnboarding from "@/features/doctor/pages/onboarding/DoctorOnboarding";
+
 // Admin Components
 import { AdminLayout } from "@/features/admin/layouts/AdminLayout";
 import {
@@ -62,6 +65,7 @@ import {
   Appointments as AdminAppointments,
   Revenue as AdminRevenue,
   Settings as AdminSettings,
+  PendingDoctors,
 } from "@/features/admin";
 
 // Pages
@@ -115,11 +119,18 @@ const App = () => (
             </ProtectedRoute>
           } />
 
+          {/* Doctor Onboarding Route - Protected */}
+          <Route path="/doctor-onboarding" element={
+            <ProtectedRoute>
+              <DoctorOnboarding />
+            </ProtectedRoute>
+          } />
+
           {/* patient Dashboard Route  */}
           <Route path="/patient-dashboard" element={
-            // <ProtectedRoute>
-              <PatientDashboardLayout />
-            // </ProtectedRoute>
+            <ProtectedRoute>
+            <PatientDashboardLayout />
+             </ProtectedRoute>
           }>
             <Route index element={<DashboardHome />} />
             <Route path="symptom-intake" element={<SymptomIntake />} />
@@ -147,9 +158,9 @@ const App = () => (
 
           {/* Doctor Dashboard Route - Legacy */}
           <Route element={
-            // <ProtectedRoute>
-              <DashboardLayout />
-            // </ProtectedRoute>
+            <ProtectedRoute>
+            <DashboardLayout />
+           </ProtectedRoute>
           }>
             <Route path="/doctor-dashboard" element={<DoctorDashboard />} />
             <Route path="/doctor-dashboard/patients" element={<DoctorPatientQueue />} />
@@ -180,6 +191,7 @@ const App = () => (
             <Route path="appointments" element={<AdminAppointments />} />
             <Route path="revenue" element={<AdminRevenue />} />
             <Route path="settings" element={<AdminSettings />} />
+            <Route path="pending-doctors" element={<PendingDoctors />} />
           </Route>
 
           {/* 404 Route - Must be last */}

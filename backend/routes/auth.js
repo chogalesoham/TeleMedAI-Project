@@ -5,6 +5,8 @@ const {
   patientSignup,
   patientLogin,
   adminLogin,
+  doctorSignup,
+  doctorLogin,
   getCurrentUser,
   logout,
   changePassword,
@@ -24,6 +26,20 @@ router.post('/patient/signup', patientSignup);
  * @access  Public
  */
 router.post('/patient/login', patientLogin);
+
+/**
+ * @route   POST /api/auth/doctor/signup
+ * @desc    Register a new doctor
+ * @access  Public
+ */
+router.post('/doctor/signup', doctorSignup);
+
+/**
+ * @route   POST /api/auth/doctor/login
+ * @desc    Login doctor and return JWT token
+ * @access  Public
+ */
+router.post('/doctor/login', doctorLogin);
 
 /**
  * @route   POST /api/auth/admin/login
@@ -61,3 +77,4 @@ router.post('/change-password', authMiddleware, changePassword);
 router.put('/profile', authMiddleware, updateProfile);
 
 module.exports = router;
+

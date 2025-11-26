@@ -24,4 +24,10 @@ router.get('/patients/stats', adminController.getPatientStats);
 router.get('/patients/:id', adminController.getPatientById);
 router.patch('/patients/:id/status', adminController.updatePatientStatus);
 
+// Doctor management routes
+router.get('/doctors', adminController.getAllDoctors);
+router.get('/doctors/pending', adminController.getPendingDoctors);
+router.put('/doctors/:id/approve', adminController.approveDoctor);
+router.put('/doctors/:id/reject', adminController.rejectDoctor);
+
 module.exports = router;

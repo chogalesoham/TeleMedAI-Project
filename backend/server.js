@@ -18,10 +18,14 @@ app.use(express.urlencoded({ extended: true }));
 // API Routes
 const authRoutes = require('./routes/auth');
 const onboardingRoutes = require('./routes/onboarding');
+const doctorOnboardingRoutes = require('./routes/doctorOnboarding');
 const adminRoutes = require('./routes/admin');
+const patientRoutes = require('./routes/patient');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/patient/onboarding', onboardingRoutes);
+app.use('/api/patient', patientRoutes);
+app.use('/api/doctor/onboarding', doctorOnboardingRoutes);
 app.use('/api/admin', adminRoutes);
 
 // Start Server

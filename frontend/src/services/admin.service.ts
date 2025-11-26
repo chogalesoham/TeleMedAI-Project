@@ -35,7 +35,7 @@ export class AdminService {
   }): Promise<ApiResponse> {
     try {
       const queryParams = new URLSearchParams();
-      
+
       if (params?.search) queryParams.append('search', params.search);
       if (params?.status) queryParams.append('status', params.status);
       if (params?.page) queryParams.append('page', params.page.toString());
@@ -136,6 +136,125 @@ export class AdminService {
       return data;
     } catch (error) {
       console.error('Error updating patient status:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'An error occurred',
+      };
+    }
+  }
+
+  // ==================== DOCTOR MANAGEMENT ====================
+
+  /**
+   * Get all pending doctors awaiting approval
+   */
+  static async getPendingDoctors(): Promise<ApiResponse> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/admin/doctors/pending`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to fetch pending doctors');
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error fetching pending doctors:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'An error occurred',
+      };
+    }
+  }
+
+  /**
+   * Get all doctors with optional status filter
+   */
+  static async getAllDoctors(params?: {
+    status?: 'pending' | 'approved' | 'rejected';
+    page?: number;
+    limit?: number;
+  }): Promise<ApiResponse> {
+    try {
+      const queryParams = new URLSearchParams();
+
+      if (params?.status) queryParams.append('status', params.status);
+      if (params?.page) queryParams.append('page', params.page.toString());
+      if (params?.limit) queryParams.append('limit', params.limit.toString());
+
+      const url = `${API_BASE_URL}/api/admin/doctors${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to fetch doctors');
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error fetching doctors:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'An error occurred',
+      };
+    }
+  }
+
+  /**
+   * Approve a doctor
+   */
+  static async approveDoctor(doctorId: string): Promise<ApiResponse> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/admin/doctors/${doctorId}/approve`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to approve doctor');
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error approving doctor:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'An error occurred',
+      };
+    }
+  }
+
+  /**
+   * Reject a doctor with reason
+   */
+  static async rejectDoctor(doctorId: string, reason: string): Promise<ApiResponse> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/admin/doctors/${doctorId}/reject`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ reason }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to reject doctor');
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error rejecting doctor:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'An error occurred',

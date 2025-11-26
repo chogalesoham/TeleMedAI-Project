@@ -1,4 +1,6 @@
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import {
   Users,
   UserCog,
@@ -14,8 +16,30 @@ import { RevenueChart } from '../components/Charts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import AdminService from '@/services/admin.service';
 
 export const Dashboard = () => {
+  const navigate = useNavigate();
+  const [pendingDoctors, setPendingDoctors] = useState<any[]>([]);
+  const [pendingCount, setPendingCount] = useState(0);
+
+  useEffect(() => {
+    fetchPendingDoctors();
+  }, []);
+
+  const fetchPendingDoctors = async () => {
+    try {
+      const response = await AdminService.getPendingDoctors();
+      if (response.success && response.data) {
+        const doctors = response.data.doctors || [];
+        setPendingDoctors(doctors.slice(0, 3)); // Show only first 3
+        setPendingCount(doctors.length);
+      }
+    } catch (error) {
+      console.error('Error fetching pending doctors:', error);
+    }
+  };
+
   const stats = [
     {
       title: 'Total Patients',
@@ -33,9 +57,9 @@ export const Dashboard = () => {
     },
     {
       title: 'Pending Approvals',
-      value: '12',
+      value: pendingCount.toString(),
       icon: Clock,
-      trend: { value: '3', isPositive: false },
+      trend: { value: pendingCount > 0 ? pendingCount.toString() : '0', isPositive: false },
       description: 'Doctor requests',
     },
     {
@@ -91,11 +115,7 @@ export const Dashboard = () => {
     },
   ];
 
-  const pendingDoctors = [
-    { id: 1, name: 'Dr. Alex Thompson', specialty: 'Cardiology', date: '2024-01-15' },
-    { id: 2, name: 'Dr. Lisa Anderson', specialty: 'Dermatology', date: '2024-01-14' },
-    { id: 3, name: 'Dr. Mark Davis', specialty: 'Pediatrics', date: '2024-01-13' },
-  ];
+
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -205,28 +225,42 @@ export const Dashboard = () => {
             </CardHeader>
             <CardContent className="pt-5">
               <div className="space-y-3">
-                {pendingDoctors.map((doctor) => (
-                  <div
-                    key={doctor.id}
-                    className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 sm:p-4 bg-gradient-to-r from-gray-50 to-blue-50/30 rounded-xl hover:shadow-md transition-all duration-200 border border-gray-100"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-900 text-sm sm:text-base truncate">{doctor.name}</p>
-                      <p className="text-xs sm:text-sm text-gray-600 mt-0.5 truncate">{doctor.specialty}</p>
+                {pendingDoctors.length > 0 ? (
+                  pendingDoctors.map((doctor) => (
+                    <div
+                      key={doctor.id}
+                      className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 sm:p-4 bg-gradient-to-r from-gray-50 to-blue-50/30 rounded-xl hover:shadow-md transition-all duration-200 border border-gray-100"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-gray-900 text-sm sm:text-base truncate">{doctor.name}</p>
+                        <p className="text-xs sm:text-sm text-gray-600 mt-0.5 truncate">
+                          {doctor.specialties?.join(', ') || 'General Practice'}
+                        </p>
+                      </div>
+                      <div className="flex gap-2 w-full sm:w-auto">
+                        <Button
+                          size="sm"
+                          onClick={() => navigate('/admin/pending-doctors')}
+                          className="flex-1 sm:flex-none bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 shadow-md font-semibold h-9 px-4"
+                        >
+                          <CheckCircle className="w-4 h-4 mr-1" />
+                          Review
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex gap-2 w-full sm:w-auto">
-                      <Button size="sm" className="flex-1 sm:flex-none bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 shadow-md font-semibold h-9 px-4">
-                        <CheckCircle className="w-4 h-4 mr-1" />
-                        Approve
-                      </Button>
-                      <Button size="sm" variant="outline" className="flex-1 sm:flex-none border-blue-200 hover:bg-blue-50 hover:border-blue-300 font-semibold h-9 px-4">
-                        View
-                      </Button>
-                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <UserCog className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">No pending approvals</p>
                   </div>
-                ))}
+                )}
               </div>
-              <Button variant="outline" className="w-full mt-5 h-11 rounded-xl font-semibold hover:bg-green-50 hover:text-green-600 hover:border-green-200 transition-all">
+              <Button
+                variant="outline"
+                onClick={() => navigate('/admin/pending-doctors')}
+                className="w-full mt-5 h-11 rounded-xl font-semibold hover:bg-green-50 hover:text-green-600 hover:border-green-200 transition-all"
+              >
                 View All Requests
               </Button>
             </CardContent>

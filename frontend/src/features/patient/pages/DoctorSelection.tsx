@@ -1,17 +1,18 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Search, 
-  Filter, 
-  Star, 
-  MapPin, 
-  DollarSign, 
+import {
+  Search,
+  Filter,
+  Star,
+  MapPin,
+  DollarSign,
   Clock,
   Video,
   Calendar,
   Award,
   Languages,
-  CheckCircle
+  CheckCircle,
+  Loader2
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,33 +20,75 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { mockDoctors } from '../data/mockData';
 import { useNavigate } from 'react-router-dom';
+import PatientService from '@/services/patient.service';
+import { toast } from 'sonner';
+
+interface Doctor {
+  id: string;
+  name: string;
+  profilePicture: string;
+  specialties: string[];
+  languages: string[];
+  consultationModes: string[];
+  consultationFee: {
+    currency: string;
+    amount: number;
+    mode: string;
+  };
+  shortBio: string;
+  rating: number;
+  reviewCount: number;
+  experience: number;
+  availability: any[];
+}
 
 export const DoctorSelection = () => {
   const navigate = useNavigate();
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSpecialization, setSelectedSpecialization] = useState('all');
-  const [selectedAvailability, setSelectedAvailability] = useState('all');
-  const [sortBy, setSortBy] = useState('rating');
+  const [sortBy, setSortBy] = useState<'rating' | 'price' | 'experience'>('rating');
 
-  const specializations = ['all', 'Cardiologist', 'General Physician', 'Dermatologist', 'Psychiatrist', 'Pediatrician', 'Neurologist'];
+  const specializations = ['all', 'Cardiology', 'General Medicine', 'Dermatology', 'Psychiatry', 'Pediatrics', 'Neurology'];
 
-  const filteredDoctors = mockDoctors
-    .filter(doctor => {
-      const matchesSearch = doctor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          doctor.specialization.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesSpec = selectedSpecialization === 'all' || doctor.specialization === selectedSpecialization;
-      const matchesAvail = selectedAvailability === 'all' || 
-                          (selectedAvailability === 'available' && doctor.availability.length > 0);
-      return matchesSearch && matchesSpec && matchesAvail;
-    })
-    .sort((a, b) => {
-      if (sortBy === 'rating') return b.rating - a.rating;
-      if (sortBy === 'price') return a.consultationFee - b.consultationFee;
-      if (sortBy === 'experience') return b.experience - a.experience;
-      return 0;
-    });
+  useEffect(() => {
+    fetchDoctors();
+  }, [selectedSpecialization, sortBy]);
+
+  const fetchDoctors = async () => {
+    setIsLoading(true);
+    try {
+      const response = await PatientService.getApprovedDoctors({
+        specialization: selectedSpecialization !== 'all' ? selectedSpecialization : undefined,
+        search: searchQuery,
+        sortBy
+      });
+
+      if (response.success && response.data) {
+        setDoctors(response.data.doctors || []);
+      } else {
+        toast.error(response.error || 'Failed to load doctors');
+      }
+    } catch (error) {
+      console.error('Error fetching doctors:', error);
+      toast.error('Failed to load doctors');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSearch = () => {
+    fetchDoctors();
+  };
+
+  const filteredDoctors = doctors.filter(doctor => {
+    if (!searchQuery) return true;
+    const searchLower = searchQuery.toLowerCase();
+    return doctor.name.toLowerCase().includes(searchLower) ||
+      doctor.specialties.some(s => s.toLowerCase().includes(searchLower));
+  });
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -66,6 +109,7 @@ export const DoctorSelection = () => {
                 placeholder="Search by name or specialization..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                 className="pl-9 sm:pl-10 text-sm sm:text-base h-9 sm:h-10"
               />
             </div>
@@ -84,18 +128,11 @@ export const DoctorSelection = () => {
               </SelectContent>
             </Select>
 
-            {/* Availability Filter */}
-            <Select value={selectedAvailability} onValueChange={setSelectedAvailability}>
-              <SelectTrigger className="text-sm sm:text-base h-9 sm:h-10">
-                <SelectValue placeholder="Availability" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all" className="text-sm">All</SelectItem>
-                <SelectItem value="available" className="text-sm">Available Now</SelectItem>
-                <SelectItem value="tomorrow" className="text-sm">Tomorrow</SelectItem>
-                <SelectItem value="this-week" className="text-sm">This Week</SelectItem>
-              </SelectContent>
-            </Select>
+            {/* Search Button */}
+            <Button onClick={handleSearch} className="h-9 sm:h-10">
+              <Search className="w-4 h-4 mr-2" />
+              Search
+            </Button>
           </div>
 
           {/* Sort */}
@@ -141,92 +178,104 @@ export const DoctorSelection = () => {
         </p>
       </div>
 
+      {/* Loading State */}
+      {isLoading && (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      )}
+
       {/* Doctor Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-        {filteredDoctors.map((doctor, index) => (
-          <motion.div
-            key={doctor.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-            whileHover={{ y: -4 }}
-          >
-            <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate(`/patient-dashboard/doctor/${doctor.id}`)}>
-              <CardContent className="p-4 sm:p-6">
-                {/* Doctor Header */}
-                <div className="flex items-start gap-3 sm:gap-4 mb-3 sm:mb-4">
-                  <Avatar className="w-12 h-12 sm:w-16 sm:h-16 flex-shrink-0">
-                    <AvatarImage src={doctor.image} />
-                    <AvatarFallback className="text-sm sm:text-base">{doctor.name[4]}{doctor.name.split(' ')[1]?.[0]}</AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-base sm:text-lg text-gray-900 truncate">{doctor.name}</h3>
-                    <p className="text-sm text-gray-600">{doctor.specialization}</p>
-                    <div className="flex items-center gap-1 mt-1">
-                      <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                      <span className="text-sm font-medium">{doctor.rating}</span>
-                      <span className="text-xs text-gray-500">({doctor.reviewCount} reviews)</span>
+      {!isLoading && filteredDoctors.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          {filteredDoctors.map((doctor, index) => (
+            <motion.div
+              key={doctor.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              whileHover={{ y: -4 }}
+            >
+              <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer" onClick={() => navigate(`/patient-dashboard/doctor/${doctor.id}`)}>
+                <CardContent className="p-4 sm:p-6">
+                  {/* Doctor Header */}
+                  <div className="flex items-start gap-3 sm:gap-4 mb-3 sm:mb-4">
+                    <Avatar className="w-12 h-12 sm:w-16 sm:h-16 flex-shrink-0">
+                      <AvatarImage src={doctor.profilePicture} />
+                      <AvatarFallback className="text-sm sm:text-base">
+                        {doctor.name.split(' ').map(n => n[0]).join('')}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-base sm:text-lg text-gray-900 truncate">{doctor.name}</h3>
+                      <p className="text-sm text-gray-600">{doctor.specialties[0] || 'General Practice'}</p>
+                      <div className="flex items-center gap-1 mt-1">
+                        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                        <span className="text-sm font-medium">{doctor.rating}</span>
+                        <span className="text-xs text-gray-500">({doctor.reviewCount} reviews)</span>
+                      </div>
                     </div>
-                  </div>
-                  {doctor.verified && (
                     <CheckCircle className="w-5 h-5 text-blue-600" />
-                  )}
-                </div>
+                  </div>
 
-                {/* Doctor Info */}
-                <div className="space-y-2 mb-4">
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <Award className="w-4 h-4" />
-                    <span>{doctor.experience} years experience</span>
+                  {/* Doctor Info */}
+                  <div className="space-y-2 mb-4">
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <Award className="w-4 h-4" />
+                      <span>{doctor.experience} years experience</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <Languages className="w-4 h-4" />
+                      <span>{doctor.languages.join(', ')}</span>
+                    </div>
+                    {doctor.availability.length > 0 && (
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <Clock className="w-4 h-4" />
+                        <span>Available</span>
+                      </div>
+                    )}
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <MapPin className="w-4 h-4" />
-                    <span>{doctor.location}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <Languages className="w-4 h-4" />
-                    <span>{doctor.languages.join(', ')}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <Clock className="w-4 h-4" />
-                    <span className="capitalize">{doctor.availability}</span>
-                  </div>
-                </div>
 
-                {/* Consultation Types */}
-                <div className="flex gap-2 mb-4">
-                  {doctor.consultationTypes.includes('video') && (
-                    <Badge variant="secondary" className="text-xs">
-                      <Video className="w-3 h-3 mr-1" />
-                      Video
-                    </Badge>
-                  )}
-                  {doctor.consultationTypes.includes('in-person') && (
-                    <Badge variant="secondary" className="text-xs">
-                      <MapPin className="w-3 h-3 mr-1" />
-                      In-Person
-                    </Badge>
-                  )}
-                </div>
-
-                {/* Price & View Profile Button */}
-                <div className="flex items-center justify-between pt-4 border-t">
-                  <div>
-                    <p className="text-xs text-gray-600">Consultation Fee</p>
-                    <p className="text-xl font-bold text-primary">${doctor.consultationFee}</p>
+                  {/* Consultation Types */}
+                  <div className="flex gap-2 mb-4">
+                    {doctor.consultationModes.includes('tele') && (
+                      <Badge variant="secondary" className="text-xs">
+                        <Video className="w-3 h-3 mr-1" />
+                        Video
+                      </Badge>
+                    )}
+                    {doctor.consultationModes.includes('in_person') && (
+                      <Badge variant="secondary" className="text-xs">
+                        <MapPin className="w-3 h-3 mr-1" />
+                        In-Person
+                      </Badge>
+                    )}
                   </div>
-                  <Button onClick={() => navigate(`/patient-dashboard/doctor/${doctor.id}`)}>
-                    View Profile
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        ))}
-      </div>
+
+                  {/* Price & View Profile Button */}
+                  <div className="flex items-center justify-between pt-4 border-t">
+                    <div>
+                      <p className="text-xs text-gray-600">Consultation Fee</p>
+                      <p className="text-xl font-bold text-primary">
+                        {doctor.consultationFee.currency} {doctor.consultationFee.amount}
+                      </p>
+                    </div>
+                    <Button onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/patient-dashboard/doctor/${doctor.id}`);
+                    }}>
+                      View Profile
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+      )}
 
       {/* No Results */}
-      {filteredDoctors.length === 0 && (
+      {!isLoading && filteredDoctors.length === 0 && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -240,7 +289,7 @@ export const DoctorSelection = () => {
             onClick={() => {
               setSearchQuery('');
               setSelectedSpecialization('all');
-              setSelectedAvailability('all');
+              fetchDoctors();
             }}
           >
             Clear Filters

@@ -51,7 +51,7 @@ export const DoctorSignup = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     // Validation
     const newErrors: Record<string, string> = {};
     if (!formData.fullName) newErrors.fullName = 'Full name is required';
@@ -63,18 +63,41 @@ export const DoctorSignup = () => {
     if (!formData.password) newErrors.password = 'Password is required';
     if (formData.password.length < 8) newErrors.password = 'Password must be at least 8 characters';
     if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
-    
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       setIsLoading(false);
       return;
     }
 
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      // Import the doctor signup service
+      const { doctorSignup } = await import('@/services/auth.service');
+
+      // Prepare signup data
+      const signupData = {
+        name: formData.fullName,
+        email: formData.email,
+        password: formData.password,
+        phone: formData.phone,
+        dateOfBirth: new Date().toISOString(), // You may want to add a DOB field
+        gender: 'Other', // You may want to add a gender field
+        location: {
+          city: formData.clinicHospital || ''
+        }
+      };
+
+      const response = await doctorSignup(signupData);
+
+      if (response.success) {
+        // Navigate to doctor onboarding
+        navigate('/doctor-onboarding');
+      }
+    } catch (error: any) {
+      setErrors({ general: error.message || 'Signup failed. Please try again.' });
+    } finally {
       setIsLoading(false);
-      navigate('/doctor-dashboard');
-    }, 1500);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -118,8 +141,8 @@ export const DoctorSignup = () => {
                 TeleMed<span className="bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">AI</span>
               </span>
             </Link>
-            
-            <motion.div 
+
+            <motion.div
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-purple-500/10 to-indigo-500/10 border border-purple-200/50 backdrop-blur-sm"
               whileHover={{ scale: 1.05 }}
               transition={{ type: "spring", stiffness: 300 }}
@@ -127,7 +150,7 @@ export const DoctorSignup = () => {
               <Stethoscope className="w-5 h-5 text-purple-600" />
               <span className="text-sm font-semibold text-purple-700">Join as Doctor</span>
             </motion.div>
-            
+
             <div className="space-y-4">
               <h1 className="text-5xl lg:text-6xl font-bold leading-tight">
                 Become Part of{' '}
@@ -135,7 +158,7 @@ export const DoctorSignup = () => {
                   The Future
                 </span>
               </h1>
-              
+
               <p className="text-xl text-gray-600 leading-relaxed">
                 Join our network of verified healthcare professionals and provide exceptional care powered by AI.
               </p>
@@ -360,8 +383,8 @@ export const DoctorSignup = () => {
               <div className="mt-8 text-center">
                 <p className="text-gray-600">
                   Already registered?{' '}
-                  <Link 
-                    to="/doctor-login" 
+                  <Link
+                    to="/doctor-login"
                     className="font-semibold text-purple-600 hover:text-purple-600/80 transition-colors"
                   >
                     Sign in
