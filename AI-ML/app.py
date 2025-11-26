@@ -63,60 +63,69 @@ async def health_check():
         "service": "Telemedicine Report Analyzer"
     }
 
-# --- Report Analysis Endpoint ---
-@app.post("/api/v1/reports/analyze", tags=["Reports"])
-async def analyze_report(file: UploadFile = File(...)) -> Dict:
+from datetime import datetime
+
+# --- New AI Report Analyze Endpoint ---
+@app.post("/ai/report-analyze", tags=["AI Analysis"])
+async def ai_report_analyze(
+    file: UploadFile = File(...),
+    document_type: str = Form(...),
+    notes: Optional[str] = Form(None)
+) -> Dict:
     """
-    Analyze medical report (PDF or image)
-    
-    - **file**: Medical report file (PDF, PNG, JPG, JPEG)
-    
-    Returns detailed analysis including:
-    - Report type
-    - Test findings with values and normal ranges
-    - Overall summary
-    - Health recommendations
-    - Areas of concern
+    Analyze medical report (PDF or image) using Groq Llama 3.3
+    Accepts multipart/form-data: file, document_type, notes
+    Returns structured JSON: { success, message, reportMeta, analysis }
     """
-    
     # Validate filename
     if not file.filename:
         raise HTTPException(status_code=400, detail="No file selected")
-    
+
     # Validate file type
     if not allowed_file(file.filename):
         raise HTTPException(
             status_code=400,
             detail=f"Invalid file type. Allowed types: {', '.join(ALLOWED_EXTENSIONS)}"
         )
-    
+
     # Check file size
-    file_size = 0
-    chunk_size = 1024 * 1024  # 1MB chunks
     contents = await file.read()
     file_size = len(contents)
-    
     if file_size > MAX_FILE_SIZE:
         raise HTTPException(
             status_code=400,
             detail=f"File too large. Maximum size: {MAX_FILE_SIZE / (1024*1024)}MB"
         )
-    
-    # Reset file pointer
     await file.seek(0)
-    
+
     try:
-        # Get file extension
         file_type = get_file_extension(file.filename)
-        
-        # Process the report
+        uploaded_at = datetime.utcnow().isoformat()
+
+        # Process the report (extract text + AI analysis)
         result = await process_report_file(file, file_type)
-        
         if "error" in result:
             raise HTTPException(status_code=500, detail=result["error"])
-        
-        return JSONResponse(content=result, status_code=200)
-        
+
+        # Compose reportMeta
+        report_meta = {
+            "fileName": file.filename,
+            "fileType": file_type,
+            "fileSize": file_size,
+            "documentType": document_type,
+            "notes": notes,
+            "uploadedAt": uploaded_at
+        }
+
+        # Compose response
+        response = {
+            "success": True,
+            "message": "Report analyzed successfully.",
+            "reportMeta": report_meta,
+            "analysis": result["analysis"]
+        }
+        return JSONResponse(content=response, status_code=200)
+
     except HTTPException:
         raise
     except Exception as e:
