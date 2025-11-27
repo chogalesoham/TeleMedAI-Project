@@ -236,6 +236,58 @@ async def internal_error_handler(request, exc):
         content={"error": "Internal server error"}
     )
 
+# --- Chat Diagnosis Endpoints ---
+from chat_diagnosis import (
+    analyze_initial_problem,
+    generate_next_question,
+    extract_entities_from_text,
+    generate_final_summary
+)
+from pydantic import BaseModel
+from typing import List, Dict, Any
+
+class InitialProblemRequest(BaseModel):
+    problem_text: str
+
+class NextQuestionRequest(BaseModel):
+    history: List[Dict[str, Any]]
+    patient_info: Dict[str, Any]
+
+class ExtractEntitiesRequest(BaseModel):
+    text: str
+
+class FinalSummaryRequest(BaseModel):
+    history: List[Dict[str, Any]]
+    patient_info: Dict[str, Any]
+
+@app.post("/initial-problem", tags=["Chat Diagnosis"])
+async def initial_problem_endpoint(request: InitialProblemRequest):
+    result = await analyze_initial_problem(request.problem_text)
+    if "error" in result:
+        raise HTTPException(status_code=500, detail=result["error"])
+    return result
+
+@app.post("/next-question", tags=["Chat Diagnosis"])
+async def next_question_endpoint(request: NextQuestionRequest):
+    result = await generate_next_question(request.history, request.patient_info)
+    if "error" in result:
+        raise HTTPException(status_code=500, detail=result["error"])
+    return result
+
+@app.post("/extract-entities", tags=["Chat Diagnosis"])
+async def extract_entities_endpoint(request: ExtractEntitiesRequest):
+    result = await extract_entities_from_text(request.text)
+    if "error" in result:
+        raise HTTPException(status_code=500, detail=result["error"])
+    return result
+
+@app.post("/final-summary", tags=["Chat Diagnosis"])
+async def final_summary_endpoint(request: FinalSummaryRequest):
+    result = await generate_final_summary(request.history, request.patient_info)
+    if "error" in result:
+        raise HTTPException(status_code=500, detail=result["error"])
+    return result
+
 if __name__ == "__main__":
     uvicorn.run(
         "app:app",

@@ -47,7 +47,7 @@ interface NavItem {
 const navigation: NavItem[] = [
   { name: 'Dashboard', path: '/patient-dashboard', icon: Home },
   { name: 'Symptom Intake', path: '/patient-dashboard/symptom-intake', icon: Activity },
-  { name: 'Pre-Diagnosis', path: '/patient-dashboard/pre-diagnosis', icon: FileText },
+  { name: 'My Reports', path: '/patient-dashboard/my-reports', icon: FileText },
   { name: 'Doctor Selection', path: '/patient-dashboard/doctor-selection', icon: Stethoscope },
   { name: 'My Appointments', path: '/patient-dashboard/my-appointments', icon: Calendar },
   { name: 'Live Consultation', path: '/patient-dashboard/live-consultation', icon: Video },

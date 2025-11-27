@@ -1,13 +1,15 @@
 // Export all patient dashboard pages
 export { DashboardHome } from './DashboardHome';
-export { SymptomIntake } from './SymptomIntake';
-export { PreDiagnosis } from './PreDiagnosis';
+export { default as SymptomIntake } from './SymptomIntake';
+export { default as ReportSummary } from './ReportSummary';
+export { default as ReportDetails } from './ReportDetails';
 export { DoctorSelection } from './DoctorSelection';
 export { DoctorProfile } from './DoctorProfile';
 export { AppointmentBooking } from './AppointmentBooking';
 export { LiveConsultation } from './LiveConsultation';
 export { ConsultationSummary } from './ConsultationSummary';
 export { Medications } from './Medications';
+export { default as MyReports } from './MyReports';
 
 // Re-export with default
 export { default as ReportUpload } from './ReportUpload';

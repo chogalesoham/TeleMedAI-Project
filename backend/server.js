@@ -33,6 +33,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/ai', require('./routes/preDiagnosis'));
 
 // Start Server
 app.listen(PORT, () => {

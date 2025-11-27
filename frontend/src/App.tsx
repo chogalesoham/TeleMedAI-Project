@@ -29,7 +29,6 @@ import {
 import {
   DashboardHome,
   SymptomIntake,
-  PreDiagnosis,
   DoctorSelection,
   DoctorProfile,
   AppointmentBooking,
@@ -44,6 +43,9 @@ import {
   Settings,
   Support,
   Logout,
+  ReportSummary,
+  ReportDetails,
+  MyReports,
 } from "@/features/patient/pages";
 
 // Patient Appointment Pages
@@ -141,7 +143,9 @@ const App = () => (
           }>
             <Route index element={<DashboardHome />} />
             <Route path="symptom-intake" element={<SymptomIntake />} />
-            <Route path="pre-diagnosis" element={<PreDiagnosis />} />
+            <Route path="report-summary" element={<ReportSummary />} />
+            <Route path="my-reports" element={<MyReports />} />
+            <Route path="report/:id" element={<ReportDetails />} />
             <Route path="doctor-selection" element={<DoctorSelection />} />
             <Route path="doctors" element={<DoctorSelection />} /> {/* Alias */}
             <Route path="doctor/:id" element={<DoctorProfile />} />

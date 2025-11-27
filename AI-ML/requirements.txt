@@ -1,13 +1,41 @@
+# --- CORE FRAMEWORKS ---
 fastapi>=0.109.0
 uvicorn[standard]>=0.27.0
-python-multipart>=0.0.6
-langchain>=0.1.0
-langchain-groq>=0.0.1
-langchain-core>=0.1.0
+flask>=3.0.0
+
+# --- ENVIRONMENT ---
 python-dotenv>=1.0.0
+
+# --- GEMINI (Google Generative AI) ---
+google-generativeai>=0.3.0
+protobuf>=4.25.0
+
+# --- HUGGINGFACE TRANSFORMERS + NER ---
+transformers>=4.35.0
+datasets>=2.14.0
+tokenizers>=0.13.0
+accelerate>=0.25.0
+sentencepiece>=0.1.99
+
+# --- TORCH (REQUIRED FOR NER MODELS) ---
+torch
+
+# --- LANGCHAIN (Your Existing Code) ---
+langchain>=0.1.0
+langchain-core>=0.1.0
+langchain-groq>=0.0.1
+groq>=0.11.0
+
+# --- PDF & OCR ---
 PyPDF2>=3.0.1
 pillow>=10.0.0
 pytesseract>=0.3.10
-pydantic>=2.5.0,<3.0.0
-groq>=0.11.0
+
+# --- AUDIO / MEDIA ---
 pydub>=0.25.1
+
+# --- FILE UPLOADS ---
+python-multipart>=0.0.6
+
+# --- PRODUCTION SERVER (OPTIONAL BUT RECOMMENDED ON WINDOWS) ---
+waitress>=2.1.0
