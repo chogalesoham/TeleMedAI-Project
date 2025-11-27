@@ -11,7 +11,6 @@ export { Medications } from './Medications';
 
 // Re-export with default
 export { default as ReportUpload } from './ReportUpload';
-export { default as MedicalHistory } from './MedicalHistory';
 export { default as AIChatbot } from './AIChatbot';
 export { default as DietLifestyle } from './DietLifestyle';
 export { default as NearbyClinics } from './NearbyClinics';

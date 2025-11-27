@@ -37,7 +37,6 @@ import {
   ConsultationSummary,
   Medications,
   ReportUpload,
-  MedicalHistory,
   AIChatbot,
   DietLifestyle,
   NearbyClinics,
@@ -49,8 +48,6 @@ import {
 
 // Patient Appointment Pages
 import MyAppointments from "@/features/patient/pages/MyAppointments";
-import UpcomingAppointments from "@/features/patient/pages/UpcomingAppointments";
-import PastAppointments from "@/features/patient/pages/PastAppointments";
 
 // Doctor Appointment Pages
 import AppointmentRequests from "@/features/doctor/pages/AppointmentRequests";
@@ -151,14 +148,11 @@ const App = () => (
             <Route path="appointment-booking" element={<AppointmentBooking />} />
             <Route path="book-appointment" element={<AppointmentBooking />} /> {/* Alias */}
             <Route path="my-appointments" element={<MyAppointments />} />
-            <Route path="upcoming-appointments" element={<UpcomingAppointments />} />
-            <Route path="past-appointments" element={<PastAppointments />} />
             <Route path="live-consultation" element={<LiveConsultation />} />
             <Route path="consultation-summary" element={<ConsultationSummary />} />
             <Route path="medications" element={<Medications />} />
             <Route path="report-upload" element={<ReportUpload />} />
             <Route path="upload-reports" element={<ReportUpload />} /> {/* Alias */}
-            <Route path="medical-history" element={<MedicalHistory />} />
             <Route path="ai-chatbot" element={<AIChatbot />} />
             <Route path="chatbot" element={<AIChatbot />} /> {/* Alias */}
             <Route path="diet-lifestyle" element={<DietLifestyle />} />

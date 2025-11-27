@@ -11,7 +11,6 @@ import {
   ConsultationSummary,
   Medications,
   ReportUpload,
-  MedicalHistory,
   AIChatbot,
   DietLifestyle,
   NearbyClinics,
@@ -80,10 +79,6 @@ export const patientRouter = createBrowserRouter([
       {
         path: 'upload-reports',
         element: <ReportUpload />,
-      },
-      {
-        path: 'medical-history',
-        element: <MedicalHistory />,
       },
       {
         path: 'ai-chatbot',
