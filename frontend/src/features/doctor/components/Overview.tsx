@@ -1,10 +1,11 @@
 import { motion } from 'framer-motion';
-import { 
-  Users, 
-  Calendar, 
-  FileText, 
-  TrendingUp, 
-  Clock, 
+import { useState, useEffect } from 'react';
+import {
+  Users,
+  Calendar,
+  FileText,
+  TrendingUp,
+  Clock,
   Activity,
   Brain,
   MessageSquare,
@@ -14,100 +15,8 @@ import {
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
-
-const stats = [
-  {
-    title: "Today's Patients",
-    value: "24",
-    change: "+12%",
-    icon: Users,
-    color: "from-blue-500 to-cyan-500",
-    bgColor: "bg-blue-50"
-  },
-  {
-    title: "Pending Reports",
-    value: "8",
-    change: "-3%",
-    icon: FileText,
-    color: "from-purple-500 to-pink-500",
-    bgColor: "bg-purple-50"
-  },
-  {
-    title: "AI Consultations",
-    value: "18",
-    change: "+24%",
-    icon: Brain,
-    color: "from-green-500 to-emerald-500",
-    bgColor: "bg-green-50"
-  },
-  {
-    title: "Success Rate",
-    value: "98%",
-    change: "+2%",
-    icon: TrendingUp,
-    color: "from-orange-500 to-red-500",
-    bgColor: "bg-orange-50"
-  }
-];
-
-const upcomingAppointments = [
-  {
-    id: 1,
-    patient: "Priya Sharma",
-    time: "9:30 AM",
-    type: "Video Consultation",
-    severity: "medium",
-    aiScore: 72,
-    symptoms: "Fever, Headache, Fatigue"
-  },
-  {
-    id: 2,
-    patient: "Rajesh Kumar",
-    time: "10:15 AM",
-    type: "In-Person",
-    severity: "low",
-    aiScore: 45,
-    symptoms: "Routine Checkup"
-  },
-  {
-    id: 3,
-    patient: "Anjali Verma",
-    time: "11:00 AM",
-    type: "Video Consultation",
-    severity: "high",
-    aiScore: 89,
-    symptoms: "Chest Pain, Shortness of Breath"
-  }
-];
-
-const recentActivities = [
-  {
-    id: 1,
-    type: "consultation",
-    patient: "Arjun Singh",
-    time: "2 hours ago",
-    description: "Completed AI-assisted consultation",
-    status: "completed"
-  },
-  {
-    id: 2,
-    type: "report",
-    patient: "Neha Patel",
-    time: "3 hours ago",
-    description: "Lab report analyzed by AI",
-    status: "completed"
-  },
-  {
-    id: 3,
-    type: "prescription",
-    patient: "Vikram Desai",
-    time: "5 hours ago",
-    description: "Prescription generated with AI assistance",
-    status: "completed"
-  }
-];
+import { getDoctorDashboardStats, getDoctorAppointments } from '@/services/doctorDashboard.service';
 
 const getSeverityColor = (severity: string) => {
   switch (severity) {
@@ -128,6 +37,96 @@ const getSeverityIcon = (severity: string) => {
 };
 
 export const Overview = () => {
+  const [stats, setStats] = useState<any>(null);
+  const [appointments, setAppointments] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+
+        // Fetch stats and today's appointments
+        const today = new Date().toISOString().split('T')[0];
+        const [statsRes, appointmentsRes] = await Promise.all([
+          getDoctorDashboardStats(),
+          getDoctorAppointments({ status: 'confirmed', startDate: today, endDate: today })
+        ]);
+
+        setStats(statsRes.data);
+        setAppointments(appointmentsRes.data || []);
+      } catch (error) {
+        console.error('Error fetching doctor dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  const statsCards = [
+    {
+      title: "Today's Patients",
+      value: appointments.length.toString(),
+      change: "+12%",
+      icon: Users,
+      color: "from-blue-500 to-cyan-500",
+      bgColor: "bg-blue-50"
+    },
+    {
+      title: "Pending Requests",
+      value: stats?.pending?.toString() || "0",
+      change: "-3%",
+      icon: FileText,
+      color: "from-purple-500 to-pink-500",
+      bgColor: "bg-purple-50"
+    },
+    {
+      title: "Total Consultations",
+      value: stats?.total?.toString() || "0",
+      change: "+24%",
+      icon: Brain,
+      color: "from-green-500 to-emerald-500",
+      bgColor: "bg-green-50"
+    },
+    {
+      title: "Completed",
+      value: stats?.completed?.toString() || "0",
+      change: "+2%",
+      icon: TrendingUp,
+      color: "from-orange-500 to-red-500",
+      bgColor: "bg-orange-50"
+    }
+  ];
+
+  const recentActivities = [
+    {
+      id: 1,
+      type: "consultation",
+      patient: "Recent consultation",
+      time: "2 hours ago",
+      description: "Completed AI-assisted consultation",
+      status: "completed"
+    },
+    {
+      id: 2,
+      type: "report",
+      patient: "Lab report",
+      time: "3 hours ago",
+      description: "Lab report analyzed by AI",
+      status: "completed"
+    },
+    {
+      id: 3,
+      type: "prescription",
+      patient: "Prescription",
+      time: "5 hours ago",
+      description: "Prescription generated with AI assistance",
+      status: "completed"
+    }
+  ];
+
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
@@ -154,7 +153,7 @@ export const Overview = () => {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((stat, index) => (
+        {statsCards.map((stat, index) => (
           <motion.div
             key={stat.title}
             initial={{ opacity: 0, y: 20 }}
@@ -205,56 +204,63 @@ export const Overview = () => {
                 View All
               </Button>
             </div>
-            
+
             <div className="space-y-4">
-              {upcomingAppointments.map((appointment, index) => {
-                const SeverityIcon = getSeverityIcon(appointment.severity);
-                
-                return (
-                  <motion.div
-                    key={appointment.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.4 + index * 0.1 }}
-                    className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-muted/50 to-background border border-border/40 hover:shadow-md transition-all duration-200"
-                  >
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="font-semibold text-foreground">
-                          {appointment.patient}
-                        </h3>
-                        <Badge className={getSeverityColor(appointment.severity)}>
-                          <SeverityIcon className="w-3 h-3 mr-1" />
-                          {appointment.severity} severity
-                        </Badge>
-                      </div>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Clock className="w-4 h-4" />
-                          {appointment.time}
+              {loading ? (
+                <p className="text-sm text-gray-500 text-center py-4">Loading appointments...</p>
+              ) : appointments.length === 0 ? (
+                <p className="text-sm text-gray-500 text-center py-4">No appointments for today</p>
+              ) : (
+                appointments.map((appointment, index) => {
+                  const severity = 'medium'; // Can be calculated from symptoms/AI analysis
+                  const SeverityIcon = getSeverityIcon(severity);
+
+                  return (
+                    <motion.div
+                      key={appointment._id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.4 + index * 0.1 }}
+                      className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-muted/50 to-background border border-border/40 hover:shadow-md transition-all duration-200"
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="font-semibold text-foreground">
+                            {appointment.patient?.name || 'Patient'}
+                          </h3>
+                          <Badge className={getSeverityColor(severity)}>
+                            <SeverityIcon className="w-3 h-3 mr-1" />
+                            {severity} severity
+                          </Badge>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <MessageSquare className="w-4 h-4" />
-                          {appointment.type}
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          <div className="flex items-center gap-1">
+                            <Clock className="w-4 h-4" />
+                            {appointment.timeSlot}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <MessageSquare className="w-4 h-4" />
+                            {appointment.consultationMode}
+                          </div>
+                        </div>
+                        <div className="mt-2">
+                          <p className="text-xs text-muted-foreground mb-1">
+                            Reason: {appointment.reasonForVisit || 'General consultation'}
+                          </p>
+                          {appointment.symptoms && (
+                            <p className="text-xs text-muted-foreground">
+                              Symptoms: {appointment.symptoms}
+                            </p>
+                          )}
                         </div>
                       </div>
-                      <div className="mt-2">
-                        <p className="text-xs text-muted-foreground mb-1">
-                          Symptoms: {appointment.symptoms}
-                        </p>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-muted-foreground">AI Score:</span>
-                          <Progress value={appointment.aiScore} className="w-20 h-2" />
-                          <span className="text-xs font-medium">{appointment.aiScore}%</span>
-                        </div>
-                      </div>
-                    </div>
-                    <Button size="sm" className="bg-gradient-to-r from-primary to-accent">
-                      Start
-                    </Button>
-                  </motion.div>
-                );
-              })}
+                      <Button size="sm" className="bg-gradient-to-r from-primary to-accent">
+                        Start
+                      </Button>
+                    </motion.div>
+                  );
+                })
+              )}
             </div>
           </Card>
         </motion.div>
@@ -267,7 +273,7 @@ export const Overview = () => {
         >
           <Card className="p-6 border-0 shadow-lg">
             <h2 className="text-xl font-semibold mb-6">Recent Activities</h2>
-            
+
             <div className="space-y-4">
               {recentActivities.map((activity, index) => (
                 <motion.div
@@ -294,7 +300,7 @@ export const Overview = () => {
                 </motion.div>
               ))}
             </div>
-            
+
             <Button variant="outline" className="w-full mt-6">
               View All Activities
             </Button>
