@@ -9,7 +9,7 @@ from PIL import Image
 import pytesseract
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
-# --- Pydantic Models ---
+#  Pydantic Models 
 class ReportFinding(BaseModel):
     """Individual finding from the medical report"""
     parameter: str = Field(description="Name of the test parameter (e.g., Hemoglobin, Glucose)")
