@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Send, 
-  Bot, 
-  User, 
+import {
+  Send,
+  Bot,
+  User,
   Loader2,
   Sparkles,
   Clock,
@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { suggestedQueries } from '../data/mockData';
+import { getStoredUser } from '@/services/auth.service';
 
 interface Message {
   id: string;
@@ -48,6 +49,14 @@ export const AIChatbot = () => {
     const textToSend = messageText || input;
     if (!textToSend.trim()) return;
 
+    const user = getStoredUser();
+    if (!user) {
+      console.error("User not found");
+      return;
+    }
+    // specific to mongo/mongoose, usually _id, but auth service might map it. checking both.
+    const userId = user.id || user._id;
+
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
@@ -59,43 +68,45 @@ export const AIChatbot = () => {
     setInput('');
     setIsTyping(true);
 
-    // Simulate AI response
-    setTimeout(() => {
+    try {
+      const response = await fetch('http://localhost:8000/api/v1/agent/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: userId,
+          message: textToSend,
+          history: messages.map(m => ({ role: m.role, content: m.content }))
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: getAIResponse(textToSend),
+        content: data.response,
         timestamp: new Date()
       };
       setMessages(prev => [...prev, aiResponse]);
-      setIsTyping(false);
-    }, 1500);
-  };
 
-  const getAIResponse = (query: string): string => {
-    const lowerQuery = query.toLowerCase();
-    
-    if (lowerQuery.includes('medication') || lowerQuery.includes('medicine')) {
-      return 'Based on your profile, you\'re currently taking 5 active medications. Your adherence rate is 92%, which is excellent! Would you like me to:\n\n1. Review your medication schedule\n2. Set up reminders\n3. Check for potential interactions\n4. Provide information about a specific medication';
+    } catch (error) {
+      console.error("Error sending message:", error);
+      const errorResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: "I apologize, but I'm having trouble connecting to the server. Please try again later.",
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorResponse]);
+    } finally {
+      setIsTyping(false);
     }
-    
-    if (lowerQuery.includes('blood pressure') || lowerQuery.includes('bp')) {
-      return 'Your recent blood pressure readings show good control at an average of 125/82 mmHg. This is within the normal range. Here are some tips to maintain healthy blood pressure:\n\n• Continue your current medication (Lisinopril 10mg)\n• Reduce sodium intake to less than 2,300mg/day\n• Exercise regularly (30 mins, 5 days/week)\n• Monitor BP daily\n\nWould you like to see your BP trend chart?';
-    }
-    
-    if (lowerQuery.includes('appointment') || lowerQuery.includes('book')) {
-      return 'I can help you book an appointment! You have 3 upcoming appointments scheduled. Would you like to:\n\n1. Book a new appointment\n2. View upcoming appointments\n3. Find a specialist\n4. Check available time slots';
-    }
-    
-    if (lowerQuery.includes('symptom') || lowerQuery.includes('feeling')) {
-      return 'I can help assess your symptoms. For the most accurate evaluation, I\'d recommend using our AI Symptom Checker. However, I can provide some general information.\n\n⚠️ If you\'re experiencing severe symptoms like:\n• Chest pain\n• Difficulty breathing\n• Severe bleeding\n• Loss of consciousness\n\nPlease seek immediate medical attention or call emergency services.\n\nFor non-emergency symptoms, would you like to start a symptom assessment?';
-    }
-    
-    if (lowerQuery.includes('diet') || lowerQuery.includes('food') || lowerQuery.includes('nutrition')) {
-      return 'Based on your health profile, here are some dietary recommendations:\n\n✅ Recommended:\n• Fruits and vegetables (5+ servings/day)\n• Whole grains\n• Lean proteins (fish, chicken, beans)\n• Low-fat dairy\n• Nuts and seeds\n\n❌ Limit:\n• Sodium (less than 2,300mg/day)\n• Saturated fats\n• Processed foods\n• Sugary beverages\n\nWould you like a personalized meal plan?';
-    }
-    
-    return 'I understand you\'re asking about "' + query + '". While I can provide general health information, I recommend:\n\n1. Consulting with your healthcare provider for personalized medical advice\n2. Using our specialized features like Symptom Checker or booking an appointment\n3. Reviewing your medical history and records\n\nIs there something specific I can help you with regarding your health records, appointments, or medications?';
   };
 
   const handleSuggestedQuery = (query: string) => {
@@ -143,11 +154,10 @@ export const AIChatbot = () => {
                       className={`flex gap-2 sm:gap-3 ${message.role === 'user' ? 'flex-row-reverse' : ''}`}
                     >
                       {/* Avatar */}
-                      <Avatar className={`w-7 h-7 sm:w-8 sm:h-8 flex-shrink-0 ${
-                        message.role === 'assistant' 
-                          ? 'bg-gradient-to-br from-primary to-blue-600' 
+                      <Avatar className={`w-7 h-7 sm:w-8 sm:h-8 flex-shrink-0 ${message.role === 'assistant'
+                          ? 'bg-gradient-to-br from-primary to-blue-600'
                           : 'bg-gray-600'
-                      }`}>
+                        }`}>
                         <AvatarFallback className="text-white">
                           {message.role === 'assistant' ? <Bot className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <User className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
                         </AvatarFallback>
@@ -158,8 +168,8 @@ export const AIChatbot = () => {
                         <div
                           className={`
                             inline-block px-3 py-2 sm:px-4 sm:py-3 rounded-2xl max-w-[85%] sm:max-w-[80%]
-                            ${message.role === 'user' 
-                              ? 'bg-primary text-white rounded-tr-none' 
+                            ${message.role === 'user'
+                              ? 'bg-primary text-white rounded-tr-none'
                               : 'bg-gray-100 text-gray-900 rounded-tl-none'
                             }
                           `}
@@ -167,14 +177,13 @@ export const AIChatbot = () => {
                           <p className="text-xs sm:text-sm whitespace-pre-wrap leading-relaxed">
                             {message.content}
                           </p>
-                          <div className={`flex items-center gap-1 mt-1.5 sm:mt-2 text-[10px] sm:text-xs ${
-                            message.role === 'user' ? 'text-white/70' : 'text-gray-500'
-                          }`}>
+                          <div className={`flex items-center gap-1 mt-1.5 sm:mt-2 text-[10px] sm:text-xs ${message.role === 'user' ? 'text-white/70' : 'text-gray-500'
+                            }`}>
                             <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                             <span>
-                              {message.timestamp.toLocaleTimeString('en-US', { 
-                                hour: 'numeric', 
-                                minute: '2-digit' 
+                              {message.timestamp.toLocaleTimeString('en-US', {
+                                hour: 'numeric',
+                                minute: '2-digit'
                               })}
                             </span>
                           </div>
@@ -219,8 +228,8 @@ export const AIChatbot = () => {
                   className="flex-1 h-9 sm:h-10 text-sm"
                   disabled={isTyping}
                 />
-                <Button 
-                  onClick={() => handleSendMessage()} 
+                <Button
+                  onClick={() => handleSendMessage()}
                   disabled={!input.trim() || isTyping}
                   size="icon"
                   className="h-9 w-9 sm:h-10 sm:w-10 flex-shrink-0"
@@ -271,7 +280,7 @@ export const AIChatbot = () => {
                 <div>
                   <h3 className="font-semibold text-blue-900 text-xs sm:text-sm mb-1">AI Assistant Info</h3>
                   <p className="text-[10px] sm:text-xs text-blue-800 leading-relaxed">
-                    This AI assistant provides general health information based on your records. 
+                    This AI assistant provides general health information based on your records.
                     For medical emergencies or specific diagnoses, always consult a healthcare professional.
                   </p>
                 </div>

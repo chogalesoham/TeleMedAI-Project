@@ -1,8 +1,9 @@
 import { motion } from 'framer-motion';
-import { 
-  Calendar, 
-  Activity, 
-  Pill, 
+import { useState, useEffect } from 'react';
+import {
+  Calendar,
+  Activity,
+  Pill,
   TrendingUp,
   Clock,
   Video,
@@ -17,9 +18,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { mockStats, mockAppointments, mockMedications } from '../data/mockData';
 import { useNavigate } from 'react-router-dom';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
+import { getPatientDashboardStats, getPatientAppointments, getPatientProfile } from '@/services/dashboard.service';
+import { getStoredUser } from '@/services/auth.service';
 
 const healthData = [
   { month: 'Jun', value: 120 },
@@ -45,14 +47,51 @@ const medicationAdherence = [
   { name: 'Missed', value: 8, color: '#ef4444' },
 ];
 
+
 export const DashboardHome = () => {
   const navigate = useNavigate();
+  const [stats, setStats] = useState<any>(null);
+  const [appointments, setAppointments] = useState<any[]>([]);
+  const [profile, setProfile] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const user = getStoredUser();
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+
+        // Fetch all data in parallel
+        const [statsRes, appointmentsRes, profileRes] = await Promise.all([
+          getPatientDashboardStats(),
+          getPatientAppointments({ status: 'confirmed' }),
+          getPatientProfile()
+        ]);
+
+        setStats(statsRes.data);
+        setAppointments(appointmentsRes.data || []);
+        setProfile(profileRes.data);
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  // Calculate stats from real data
+  const totalConsultations = stats?.total || 0;
+  const upcomingAppointments = stats?.confirmed || 0;
+  const activeMedications = profile?.currentHealthStatus?.currentMedications?.length || 0;
+  const adherenceRate = 92; // Can be calculated from medication tracking
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome back, John! 👋</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome back, {user?.name || 'Patient'}! 👋</h1>
         <p className="text-gray-600">Here's your health overview for today</p>
       </div>
 
@@ -60,7 +99,7 @@ export const DashboardHome = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
         <StatsCard
           title="Total Consultations"
-          value={mockStats.totalConsultations}
+          value={totalConsultations}
           change="+12%"
           changeType="positive"
           icon={Activity}
@@ -69,21 +108,21 @@ export const DashboardHome = () => {
         />
         <StatsCard
           title="Upcoming Appointments"
-          value={mockStats.upcomingAppointments}
+          value={upcomingAppointments}
           icon={Calendar}
           iconColor="text-blue-600"
           iconBg="bg-blue-100"
         />
         <StatsCard
           title="Active Medications"
-          value={mockStats.medicationsActive}
+          value={activeMedications}
           icon={Pill}
           iconColor="text-green-600"
           iconBg="bg-green-100"
         />
         <StatsCard
           title="Adherence Rate"
-          value={`${mockStats.adherenceRate}%`}
+          value={`${adherenceRate}%`}
           change="+5%"
           changeType="positive"
           icon={TrendingUp}
@@ -154,34 +193,40 @@ export const DashboardHome = () => {
                 </Button>
               </div>
               <div className="space-y-2 sm:space-y-3">
-                {mockAppointments.slice(0, 3).map((appointment, index) => (
-                  <motion.div
-                    key={appointment.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg border border-gray-200 hover:shadow-md transition-shadow"
-                  >
-                    <Avatar className="w-10 h-10 sm:w-12 sm:h-12">
-                      <AvatarImage src={appointment.doctorImage} />
-                      <AvatarFallback>{appointment.doctorName[4]}{appointment.doctorName.split(' ')[1]?.[0]}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-sm sm:text-base text-gray-900">{appointment.doctorName}</p>
-                      <p className="text-xs sm:text-sm text-gray-600">{appointment.doctorSpecialization}</p>
-                    </div>
-                    <div className="flex items-center gap-2 sm:gap-3 sm:flex-col sm:items-end">
-                      <div className="text-left sm:text-right">
-                        <p className="text-xs sm:text-sm font-medium text-gray-900">{appointment.time}</p>
-                        <p className="text-xs sm:text-sm text-gray-600">{new Date(appointment.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
+                {loading ? (
+                  <p className="text-sm text-gray-500 text-center py-4">Loading appointments...</p>
+                ) : appointments.length === 0 ? (
+                  <p className="text-sm text-gray-500 text-center py-4">No upcoming appointments</p>
+                ) : (
+                  appointments.slice(0, 3).map((appointment, index) => (
+                    <motion.div
+                      key={appointment._id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg border border-gray-200 hover:shadow-md transition-shadow"
+                    >
+                      <Avatar className="w-10 h-10 sm:w-12 sm:h-12">
+                        <AvatarImage src={appointment.doctor?.profilePicture} />
+                        <AvatarFallback>{appointment.doctor?.name?.[0]}{appointment.doctor?.name?.split(' ')[1]?.[0]}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-sm sm:text-base text-gray-900">{appointment.doctor?.name}</p>
+                        <p className="text-xs sm:text-sm text-gray-600">{appointment.doctorProfile?.specialties?.[0] || 'General Physician'}</p>
                       </div>
-                      <Badge variant={appointment.type === 'video' ? 'default' : 'secondary'} className="text-xs">
-                        {appointment.type === 'video' ? <Video className="w-3 h-3 mr-1" /> : <Clock className="w-3 h-3 mr-1" />}
-                        {appointment.type}
-                      </Badge>
-                    </div>
-                  </motion.div>
-                ))}
+                      <div className="flex items-center gap-2 sm:gap-3 sm:flex-col sm:items-end">
+                        <div className="text-left sm:text-right">
+                          <p className="text-xs sm:text-sm font-medium text-gray-900">{appointment.timeSlot}</p>
+                          <p className="text-xs sm:text-sm text-gray-600">{new Date(appointment.appointmentDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
+                        </div>
+                        <Badge variant={appointment.consultationMode === 'video' ? 'default' : 'secondary'} className="text-xs">
+                          {appointment.consultationMode === 'video' ? <Video className="w-3 h-3 mr-1" /> : <Clock className="w-3 h-3 mr-1" />}
+                          {appointment.consultationMode}
+                        </Badge>
+                      </div>
+                    </motion.div>
+                  ))
+                )}
               </div>
             </CardContent>
           </Card>
@@ -192,31 +237,37 @@ export const DashboardHome = () => {
           <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between mb-3 sm:mb-4">
               <h3 className="text-base sm:text-lg font-semibold">Today's Reminders</h3>
-              <Badge variant="secondary">{mockMedications.length}</Badge>
+              <Badge variant="secondary">{profile?.currentHealthStatus?.currentMedications?.length || 0}</Badge>
             </div>
             <div className="space-y-2 sm:space-y-3">
-              {mockMedications.slice(0, 4).map((med, index) => (
-                <motion.div
-                  key={med.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="flex items-start gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg bg-gray-50"
-                >
-                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Pill className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-xs sm:text-sm text-gray-900 truncate">{med.name}</p>
-                    <p className="text-xs text-gray-600">{med.dosage} - {med.timings[0]}</p>
-                  </div>
-                  <Bell className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                </motion.div>
-              ))}
+              {loading ? (
+                <p className="text-sm text-gray-500 text-center py-4">Loading medications...</p>
+              ) : !profile?.currentHealthStatus?.currentMedications || profile.currentHealthStatus.currentMedications.length === 0 ? (
+                <p className="text-sm text-gray-500 text-center py-4">No active medications</p>
+              ) : (
+                profile.currentHealthStatus.currentMedications.slice(0, 4).map((med: any, index: number) => (
+                  <motion.div
+                    key={med._id || index}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="flex items-start gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-lg bg-gray-50"
+                  >
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <Pill className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-xs sm:text-sm text-gray-900 truncate">{med.name}</p>
+                      <p className="text-xs text-gray-600">{med.dosage} - {med.frequency}x daily</p>
+                    </div>
+                    <Bell className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                  </motion.div>
+                ))
+              )}
             </div>
-            <Button 
-              variant="outline" 
-              className="w-full mt-3 sm:mt-4 text-xs sm:text-sm" 
+            <Button
+              variant="outline"
+              className="w-full mt-3 sm:mt-4 text-xs sm:text-sm"
               onClick={() => navigate('/patient-dashboard/medications')}
             >
               View All Medications
@@ -233,18 +284,18 @@ export const DashboardHome = () => {
             <LineChart data={healthData}>
               <XAxis dataKey="month" stroke="#9ca3af" fontSize={11} />
               <YAxis stroke="#9ca3af" fontSize={11} />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: '#fff', 
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: '#fff',
                   border: '1px solid #e5e7eb',
                   borderRadius: '8px',
                   fontSize: '12px'
                 }}
               />
-              <Line 
-                type="monotone" 
-                dataKey="value" 
-                stroke="#3b82f6" 
+              <Line
+                type="monotone"
+                dataKey="value"
+                stroke="#3b82f6"
                 strokeWidth={2}
                 dot={{ fill: '#3b82f6', r: 3 }}
               />
@@ -258,9 +309,9 @@ export const DashboardHome = () => {
             <BarChart data={activityData}>
               <XAxis dataKey="day" stroke="#9ca3af" fontSize={11} />
               <YAxis stroke="#9ca3af" fontSize={11} />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: '#fff', 
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: '#fff',
                   border: '1px solid #e5e7eb',
                   borderRadius: '8px',
                   fontSize: '12px'
@@ -288,9 +339,9 @@ export const DashboardHome = () => {
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
               </Pie>
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: '#fff', 
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: '#fff',
                   border: '1px solid #e5e7eb',
                   borderRadius: '8px',
                   fontSize: '14px'

@@ -39,3 +39,4 @@ python-multipart>=0.0.6
 
 # --- PRODUCTION SERVER (OPTIONAL BUT RECOMMENDED ON WINDOWS) ---
 waitress>=2.1.0
+motor>=3.3.0

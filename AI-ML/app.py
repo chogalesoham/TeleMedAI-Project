@@ -6,7 +6,9 @@ from dotenv import load_dotenv
 from report_analyzer import process_report_file
 from consulatation_handler import process_consultation
 from pre_diagnosis import process_pre_diagnosis
-from typing import Dict, Optional
+from agent_service import chat_with_agent
+from typing import Dict, Optional, List, Any
+from pydantic import BaseModel
 import uvicorn
 
 load_dotenv()
@@ -221,6 +223,32 @@ async def pre_diagnosis_endpoint(
         raise HTTPException(status_code=500, detail=f"Processing failed: {str(e)}")
 
 
+# --- Agentic Chat Endpoint ---
+class ChatRequest(BaseModel):
+    userId: str
+    message: str
+    history: List[Dict[str, str]] = []
+
+@app.post("/api/v1/agent/chat", tags=["Agent"])
+async def agent_chat_endpoint(request: ChatRequest):
+    """
+    Chat with the Agentic AI Health Assistant.
+    Requires userId to fetch patient context.
+    """
+    if not request.userId:
+        raise HTTPException(status_code=400, detail="userId is required")
+        
+    result = await chat_with_agent(request.userId, request.message, request.history)
+    
+    if "error" in result:
+        # If it's a "data not found" error, maybe 404, but 500 or 400 is safer for now unless specific
+        if result["error"] == "Patient data not found":
+             raise HTTPException(status_code=404, detail=result["response"])
+        raise HTTPException(status_code=500, detail=result["error"])
+        
+    return result
+
+
 # --- Error Handlers ---
 @app.exception_handler(404)
 async def not_found_handler(request, exc):
@@ -243,8 +271,6 @@ from chat_diagnosis import (
     extract_entities_from_text,
     generate_final_summary
 )
-from pydantic import BaseModel
-from typing import List, Dict, Any
 
 class InitialProblemRequest(BaseModel):
     problem_text: str
