@@ -279,7 +279,7 @@ export const NearbyClinics = () => {
             <CardContent className="p-0">
               <div className="relative h-[300px] sm:h-[400px] lg:h-[500px] rounded-lg overflow-hidden">
                 <MapContainer
-                  center={[20.5937, 78.9629]} // Default center of India
+                  center={[20.5937, 78.9629] as [number, number]} // Default center of India
                   zoom={5}
                   style={{ height: '100%', width: '100%' }}
                   scrollWheelZoom={false}
@@ -294,7 +294,7 @@ export const NearbyClinics = () => {
                   {/* User location marker */}
                   {userLocation && (
                     <Marker
-                      position={[userLocation.latitude, userLocation.longitude]}
+                      position={[userLocation.latitude, userLocation.longitude] as [number, number]}
                       icon={userIcon}
                     >
                       <Popup>
@@ -312,7 +312,7 @@ export const NearbyClinics = () => {
                       position={[
                         doctor.clinicLocation.coordinates.latitude,
                         doctor.clinicLocation.coordinates.longitude
-                      ]}
+                      ] as [number, number]}
                       icon={doctorIcon}
                       eventHandlers={{
                         click: () => setSelectedDoctor(doctor)
