@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Loader2, Calendar, Video, CheckCircle } from 'lucide-react';
+import { Loader2, Calendar, Video, CheckCircle, Clock, Users, Sparkles, TrendingUp } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import {
     Dialog,
     DialogContent,
@@ -82,8 +83,7 @@ export const ConfirmedAppointments = () => {
     };
 
     const handleJoinCall = (id: string) => {
-        // Navigate to video call page (to be implemented)
-        toast.info('Video call feature coming soon!');
+        navigate(`/doctor-dashboard/live-consultation?consultationId=${id}`);
     };
 
     const handleViewDetails = (id: string) => {
@@ -96,6 +96,12 @@ export const ConfirmedAppointments = () => {
         return format(date, 'EEEE, MMM dd');
     };
 
+    const getDateBadgeVariant = (date: Date): "default" | "secondary" | "destructive" | "outline" => {
+        if (isToday(date)) return 'default';
+        if (isTomorrow(date)) return 'secondary';
+        return 'outline';
+    };
+
     // Group appointments by date
     const groupedAppointments = appointments.reduce((groups: Record<string, Appointment[]>, appointment) => {
         const dateKey = format(new Date(appointment.appointmentDate), 'yyyy-MM-dd');
@@ -106,67 +112,196 @@ export const ConfirmedAppointments = () => {
         return groups;
     }, {});
 
+    // Calculate stats
+    const stats = useMemo(() => {
+        const today = appointments.filter(apt => isToday(new Date(apt.appointmentDate)));
+        const tomorrow = appointments.filter(apt => isTomorrow(new Date(apt.appointmentDate)));
+        const virtual = appointments.filter(apt => apt.consultationMode === 'tele');
+
+        return {
+            total: appointments.length,
+            today: today.length,
+            tomorrow: tomorrow.length,
+            virtual: virtual.length,
+        };
+    }, [appointments]);
+
     return (
-        <div className="space-y-4 sm:space-y-6">
-            {/* Header */}
-            <div>
-                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">
-                    Confirmed Appointments
-                </h1>
-                <p className="text-xs sm:text-sm text-gray-600 mt-1">
-                    Your upcoming confirmed consultations
-                </p>
+        <div className="space-y-6">
+            {/* Hero Header */}
+            <div className="rounded-3xl bg-gradient-to-br from-green-600 via-emerald-500 to-teal-500 p-6 text-white shadow-xl sm:p-8">
+                <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-white/80">
+                            <Sparkles className="h-4 w-4" />
+                            Doctor Dashboard
+                        </div>
+                        <div>
+                            <h1 className="text-3xl font-semibold leading-tight sm:text-4xl">
+                                Confirmed Appointments
+                            </h1>
+                            <p className="mt-2 text-sm text-white/80">
+                                Manage your upcoming confirmed consultations and patient care
+                            </p>
+                        </div>
+                        <div className="flex flex-wrap gap-3">
+                            <Button
+                                className="bg-white text-green-600 hover:bg-white/90"
+                                onClick={() => navigate('/doctor-dashboard/appointment-requests')}
+                            >
+                                View Requests
+                            </Button>
+                            <Button
+                                variant="outline"
+                                className="border-white/40 bg-white/10 text-white hover:bg-white/20"
+                                onClick={() => navigate('/doctor-dashboard/appointment-history')}
+                            >
+                                View History
+                            </Button>
+                        </div>
+                    </div>
+
+                    <div className="w-full rounded-2xl bg-white/10 p-4 backdrop-blur-md lg:max-w-sm">
+                        <p className="text-xs uppercase tracking-wide text-white/70">
+                            Quick Overview
+                        </p>
+                        <div className="mt-3 grid grid-cols-2 gap-3">
+                            <div>
+                                <p className="text-2xl font-bold">{stats.total}</p>
+                                <p className="text-xs text-white/80">Total Confirmed</p>
+                            </div>
+                            <div>
+                                <p className="text-2xl font-bold">{stats.today}</p>
+                                <p className="text-xs text-white/80">Today</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            {/* Stats Card */}
-            <Card className="bg-gradient-to-br from-green-50 to-transparent border-green-200">
-                <CardContent className="p-4 sm:p-6">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm text-gray-600">Confirmed Appointments</p>
-                            <p className="text-3xl font-bold text-green-600">{appointments.length}</p>
-                        </div>
-                        <CheckCircle className="w-12 h-12 text-green-600 opacity-20" />
-                    </div>
-                </CardContent>
-            </Card>
+            {/* Enhanced Stats Cards */}
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                >
+                    <Card className="border-green-200 bg-gradient-to-br from-green-50 to-transparent hover:shadow-md transition-shadow">
+                        <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm text-gray-600">Total Confirmed</p>
+                                    <p className="text-3xl font-bold text-green-600">{stats.total}</p>
+                                </div>
+                                <div className="rounded-full bg-green-100 p-3">
+                                    <CheckCircle className="h-6 w-6 text-green-600" />
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </motion.div>
 
-            {/* Appointments List */}
+                <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                >
+                    <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-transparent hover:shadow-md transition-shadow">
+                        <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm text-gray-600">Today</p>
+                                    <p className="text-3xl font-bold text-blue-600">{stats.today}</p>
+                                </div>
+                                <div className="rounded-full bg-blue-100 p-3">
+                                    <Calendar className="h-6 w-6 text-blue-600" />
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </motion.div>
+
+                <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                >
+                    <Card className="border-purple-200 bg-gradient-to-br from-purple-50 to-transparent hover:shadow-md transition-shadow">
+                        <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm text-gray-600">Tomorrow</p>
+                                    <p className="text-3xl font-bold text-purple-600">{stats.tomorrow}</p>
+                                </div>
+                                <div className="rounded-full bg-purple-100 p-3">
+                                    <Clock className="h-6 w-6 text-purple-600" />
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </motion.div>
+
+                <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 }}
+                >
+                    <Card className="border-indigo-200 bg-gradient-to-br from-indigo-50 to-transparent hover:shadow-md transition-shadow">
+                        <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm text-gray-600">Virtual Visits</p>
+                                    <p className="text-3xl font-bold text-indigo-600">{stats.virtual}</p>
+                                </div>
+                                <div className="rounded-full bg-indigo-100 p-3">
+                                    <Video className="h-6 w-6 text-indigo-600" />
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </motion.div>
+            </div>
+
+            {/* Appointments Grid */}
             {isLoading ? (
-                <div className="flex items-center justify-center py-12">
-                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                <div className="flex items-center justify-center py-16">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 </div>
             ) : appointments.length === 0 ? (
                 <motion.div
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="text-center py-12"
+                    className="rounded-2xl border border-dashed border-muted-foreground/30 bg-muted/30 p-10 text-center"
                 >
-                    <Calendar className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                        No confirmed appointments
-                    </h3>
-                    <p className="text-gray-600">
-                        Confirmed appointments will appear here
-                    </p>
+                    <Calendar className="mx-auto mb-4 h-14 w-14 text-muted-foreground" />
+                    <h3 className="text-lg font-semibold text-foreground">No confirmed appointments</h3>
+                    <p className="text-sm text-muted-foreground">Confirmed appointments will appear here</p>
                 </motion.div>
             ) : (
-                <div className="space-y-6">
+                <div className="space-y-8">
                     {Object.entries(groupedAppointments).map(([dateKey, dayAppointments]) => {
                         const date = new Date(dateKey);
+                        const dateLabel = getDateLabel(date);
+                        const badgeVariant = getDateBadgeVariant(date);
+
                         return (
-                            <div key={dateKey}>
-                                <h2 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                                    <Calendar className="w-5 h-5" />
-                                    {getDateLabel(date)}
-                                </h2>
-                                <div className="space-y-4">
+                            <div key={dateKey} className="space-y-5">
+                                <div className="flex items-center gap-3">
+                                    <Badge variant={badgeVariant} className="text-sm font-semibold px-3 py-1">
+                                        {dateLabel}
+                                    </Badge>
+                                    <div className="h-px flex-1 bg-border"></div>
+                                    <span className="text-sm text-muted-foreground">
+                                        {dayAppointments.length} {dayAppointments.length === 1 ? 'appointment' : 'appointments'}
+                                    </span>
+                                </div>
+                                <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-3">
                                     {dayAppointments.map((appointment, index) => (
                                         <motion.div
                                             key={appointment._id}
-                                            initial={{ opacity: 0, y: 20 }}
+                                            initial={{ opacity: 0, y: 12 }}
                                             animate={{ opacity: 1, y: 0 }}
-                                            transition={{ delay: index * 0.1 }}
+                                            transition={{ delay: index * 0.05 }}
                                         >
                                             <AppointmentCard
                                                 appointment={appointment}
@@ -186,54 +321,67 @@ export const ConfirmedAppointments = () => {
 
             {/* Complete Appointment Dialog */}
             <Dialog open={isCompleteDialogOpen} onOpenChange={setIsCompleteDialogOpen}>
-                <DialogContent>
+                <DialogContent className="sm:max-w-[500px]">
                     <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
-                            <CheckCircle className="w-5 h-5 text-green-600" />
+                        <DialogTitle className="flex items-center gap-2 text-xl">
+                            <div className="rounded-full bg-green-100 p-2">
+                                <CheckCircle className="h-5 w-5 text-green-600" />
+                            </div>
                             Complete Appointment
                         </DialogTitle>
-                        <DialogDescription>
-                            Mark this appointment as completed and add your notes.
+                        <DialogDescription className="text-base">
+                            Mark this appointment as completed and add your consultation notes.
                         </DialogDescription>
                     </DialogHeader>
 
                     {selectedAppointment && (
-                        <div className="space-y-4">
+                        <div className="space-y-5">
                             {/* Appointment Details */}
-                            <div className="bg-gray-50 rounded-lg p-4 space-y-2 text-sm">
-                                <div className="flex justify-between">
-                                    <span className="text-gray-600">Patient:</span>
-                                    <span className="font-medium">{selectedAppointment.patient.name}</span>
+                            <div className="rounded-xl border bg-muted/40 p-4 space-y-3">
+                                <div className="flex items-start justify-between text-sm">
+                                    <span className="text-muted-foreground">Patient</span>
+                                    <span className="font-semibold text-right">{selectedAppointment.patient.name}</span>
                                 </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-600">Date:</span>
-                                    <span className="font-medium">
-                                        {format(new Date(selectedAppointment.appointmentDate), 'MMM dd, yyyy')}
+                                <div className="flex items-start justify-between text-sm">
+                                    <span className="text-muted-foreground">Date</span>
+                                    <span className="font-semibold text-right">
+                                        {format(new Date(selectedAppointment.appointmentDate), 'PPP')}
                                     </span>
                                 </div>
-                                <div className="flex justify-between">
-                                    <span className="text-gray-600">Time:</span>
-                                    <span className="font-medium">
-                                        {selectedAppointment.timeSlot.startTime}
+                                <div className="flex items-start justify-between text-sm">
+                                    <span className="text-muted-foreground">Time</span>
+                                    <span className="font-semibold text-right">
+                                        {selectedAppointment.timeSlot.startTime} - {selectedAppointment.timeSlot.endTime}
+                                    </span>
+                                </div>
+                                <div className="flex items-start justify-between text-sm">
+                                    <span className="text-muted-foreground">Reason</span>
+                                    <span className="font-semibold text-right max-w-[60%]">
+                                        {selectedAppointment.reasonForVisit}
                                     </span>
                                 </div>
                             </div>
 
                             {/* Doctor Notes */}
-                            <div>
-                                <Label htmlFor="notes">Doctor's Notes (Optional)</Label>
+                            <div className="space-y-2">
+                                <Label htmlFor="notes" className="text-sm font-semibold">
+                                    Consultation Notes <span className="text-muted-foreground font-normal">(Optional)</span>
+                                </Label>
                                 <Textarea
                                     id="notes"
-                                    placeholder="Add consultation notes, diagnosis, or recommendations..."
+                                    placeholder="Add diagnosis, treatment plan, prescriptions, or follow-up recommendations..."
                                     value={doctorNotes}
                                     onChange={(e) => setDoctorNotes(e.target.value)}
-                                    className="mt-2"
-                                    rows={4}
+                                    className="min-h-[120px] resize-none"
+                                    rows={5}
                                 />
+                                <p className="text-xs text-muted-foreground">
+                                    These notes will be visible to the patient in their appointment history.
+                                </p>
                             </div>
 
                             {/* Action Buttons */}
-                            <div className="flex gap-3">
+                            <div className="flex gap-3 pt-2">
                                 <Button
                                     variant="outline"
                                     className="flex-1"
@@ -243,7 +391,7 @@ export const ConfirmedAppointments = () => {
                                     Cancel
                                 </Button>
                                 <Button
-                                    className="flex-1"
+                                    className="flex-1 bg-green-600 hover:bg-green-700"
                                     onClick={handleConfirmComplete}
                                     disabled={isSubmitting}
                                 >
@@ -253,7 +401,10 @@ export const ConfirmedAppointments = () => {
                                             Processing...
                                         </>
                                     ) : (
-                                        'Mark as Completed'
+                                        <>
+                                            <CheckCircle className="w-4 h-4 mr-2" />
+                                            Mark as Completed
+                                        </>
                                     )}
                                 </Button>
                             </div>

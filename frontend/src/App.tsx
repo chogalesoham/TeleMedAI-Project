@@ -5,8 +5,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 // Layouts
-import { MainLayout, DashboardLayout } from "@/layouts";
+import { MainLayout } from "@/layouts";
 import PatientDashboardLayout from "@/features/patient/layout/PatientDashboardLayout";
+import DoctorDashboardLayout from "@/features/doctor/layout/DoctorDashboardLayout";
 
 // Auth Components
 import { ProtectedRoute, PublicRoute } from "@/components/auth/ProtectedRoute";
@@ -22,7 +23,8 @@ import {
   Appointments,
   Reports,
   Analytics,
-  Settings as DoctorSettings
+  Settings as DoctorSettings,
+  LiveConsultation as DoctorLiveConsultation
 } from "@/features/doctor";
 
 // Patient Dashboard Pages
@@ -167,21 +169,22 @@ const App = () => (
             <Route path="logout" element={<Logout />} />
           </Route>
 
-          {/* Doctor Dashboard Route - Legacy */}
-          <Route element={
+          {/* Doctor Dashboard Route */}
+          <Route path="/doctor-dashboard" element={
             <ProtectedRoute>
-              <DashboardLayout />
+              <DoctorDashboardLayout />
             </ProtectedRoute>
           }>
-            <Route path="/doctor-dashboard" element={<DoctorDashboard />} />
-            <Route path="/doctor-dashboard/patients" element={<DoctorPatientQueue />} />
-            <Route path="/doctor-dashboard/appointment-requests" element={<AppointmentRequests />} />
-            <Route path="/doctor-dashboard/confirmed-appointments" element={<ConfirmedAppointments />} />
-            <Route path="/doctor-dashboard/appointment-history" element={<AppointmentHistory />} />
-            <Route path="/doctor-dashboard/appointments" element={<Appointments />} />
-            <Route path="/doctor-dashboard/reports" element={<Reports />} />
-            <Route path="/doctor-dashboard/analytics" element={<Analytics />} />
-            <Route path="/doctor-dashboard/settings" element={<DoctorSettings />} />
+            <Route index element={<DoctorDashboard />} />
+            <Route path="patients" element={<DoctorPatientQueue />} />
+            <Route path="appointment-requests" element={<AppointmentRequests />} />
+            <Route path="confirmed-appointments" element={<ConfirmedAppointments />} />
+            <Route path="appointment-history" element={<AppointmentHistory />} />
+            <Route path="appointments" element={<Appointments />} />
+            <Route path="live-consultation" element={<DoctorLiveConsultation />} />
+            <Route path="reports" element={<Reports />} />
+            <Route path="analytics" element={<Analytics />} />
+            <Route path="settings" element={<DoctorSettings />} />
           </Route>
 
           {/* Admin Login Route - Hidden, only accessible via URL */}

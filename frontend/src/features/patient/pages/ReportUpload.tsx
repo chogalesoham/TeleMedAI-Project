@@ -16,8 +16,7 @@ import {
   Calendar,
   File,
   ChevronDown,
-  ChevronUp,
-  ArrowRight
+  ChevronUp
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -98,24 +97,37 @@ const ReportUploadComponent = () => {
 
   useEffect(() => {
     fetchMyReports();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchMyReports = async () => {
     try {
       const res = await axios.get(`http://localhost:5000/api/reports/user/${userId}`);
-      setMyReports(res.data);
+
+      // Defensive handling: API may return array or wrapped object { data: [...], reports: [...] } etc.
+      let reports: any = res.data;
+
+      // if server uses { data: [...] } or { reports: [...] }
+      if (!Array.isArray(reports)) {
+        if (Array.isArray(res.data.data)) reports = res.data.data;
+        else if (Array.isArray(res.data.reports)) reports = res.data.reports;
+        else if (res.data && typeof res.data === 'object' && Array.isArray((res.data as any).results)) reports = (res.data as any).results;
+        else reports = []; // fallback
+      }
+
+      setMyReports(reports as SavedReport[]);
     } catch (err) {
-      console.error("Failed to fetch reports", err);
+      console.error('Failed to fetch reports', err);
       setMyReports([]);
     }
   };
 
   const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return '0 Bytes';
+    if (!bytes) return '0 Bytes';
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
   };
 
   const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); setIsDragging(true); };
@@ -193,12 +205,14 @@ const ReportUploadComponent = () => {
       setSaveStatus('saved');
       fetchMyReports();
     } catch (err) {
+      console.error('Failed to save report', err);
       setSaveStatus('error');
     }
   };
 
   // Helper for status colors
   const getStatusColor = (status: string) => {
+    if (!status) return 'bg-slate-100 text-slate-700 border-slate-200';
     switch (status.toLowerCase()) {
       case 'high': return 'bg-red-100 text-red-700 border-red-200';
       case 'low': return 'bg-orange-100 text-orange-700 border-orange-200';
@@ -206,6 +220,9 @@ const ReportUploadComponent = () => {
       default: return 'bg-slate-100 text-slate-700 border-slate-200';
     }
   };
+
+  // Ensure we always render an array
+  const reportsToRender = Array.isArray(myReports) ? myReports : [];
 
   return (
     <div className="min-h-screen bg-slate-50/50 p-6 md:p-10 font-sans">
@@ -408,7 +425,7 @@ const ReportUploadComponent = () => {
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100 bg-white">
-                              {aiResult.analysis.findings.map((f, idx) => (
+                              {(aiResult.analysis.findings || []).map((f, idx) => (
                                 <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
                                   <td className="px-4 py-3 font-medium text-slate-900">{f.parameter}</td>
                                   <td className="px-4 py-3 text-slate-700">{f.value}</td>
@@ -432,7 +449,7 @@ const ReportUploadComponent = () => {
                             Recommendations
                           </h4>
                           <ul className="space-y-2">
-                            {aiResult.analysis.recommendations.map((rec, i) => (
+                            {(aiResult.analysis.recommendations || []).map((rec, i) => (
                               <li key={i} className="flex gap-2 text-sm text-emerald-800/80 leading-snug">
                                 <span className="block w-1.5 h-1.5 mt-1.5 rounded-full bg-emerald-400 shrink-0" />
                                 {rec}
@@ -446,7 +463,7 @@ const ReportUploadComponent = () => {
                             <AlertCircle className="w-5 h-5 text-red-600" />
                             Areas of Concern
                           </h4>
-                          {aiResult.analysis.concerns.length > 0 ? (
+                          {(aiResult.analysis.concerns && aiResult.analysis.concerns.length > 0) ? (
                             <ul className="space-y-2">
                               {aiResult.analysis.concerns.map((con, i) => (
                                 <li key={i} className="flex gap-2 text-sm text-red-800/80 leading-snug">
@@ -489,7 +506,7 @@ const ReportUploadComponent = () => {
                 Recent Reports
               </h3>
 
-              {myReports.length === 0 ? (
+              {reportsToRender.length === 0 ? (
                 <div className="text-center py-16 bg-white rounded-xl border border-dashed border-slate-300">
                   <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
                     <FileText className="w-8 h-8 text-slate-300" />
@@ -499,7 +516,7 @@ const ReportUploadComponent = () => {
                 </div>
               ) : (
                 <div className="grid gap-4">
-                  {myReports.map((r) => (
+                  {reportsToRender.map((r) => (
                     <Card key={r._id} className="border border-slate-200 shadow-sm hover:shadow-md transition-all hover:border-indigo-200 group">
                       <CardContent className="p-5">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -515,7 +532,7 @@ const ReportUploadComponent = () => {
                             <div className="flex items-center gap-3 text-sm text-slate-500">
                               <span className="flex items-center gap-1">
                                 <Calendar className="w-3.5 h-3.5" />
-                                {new Date(r.createdAt).toLocaleDateString()}
+                                {r.createdAt ? new Date(r.createdAt).toLocaleDateString() : ''}
                               </span>
                               <span className="w-1 h-1 rounded-full bg-slate-300" />
                               <span>{r.reportMeta?.fileName}</span>
@@ -524,11 +541,11 @@ const ReportUploadComponent = () => {
 
                           <div className="flex items-center gap-3 self-end sm:self-auto">
                             <Badge variant="outline" className={
-                              r.analysis?.findings?.some(f => f.status.toLowerCase() !== 'normal')
+                              (r.analysis?.findings || []).some(f => (f.status || '').toLowerCase() !== 'normal')
                                 ? 'bg-amber-50 text-amber-700 border-amber-200'
                                 : 'bg-emerald-50 text-emerald-700 border-emerald-200'
                             }>
-                              {r.analysis?.findings?.some(f => f.status.toLowerCase() !== 'normal') ? 'Attention Needed' : 'Normal'}
+                              {(r.analysis?.findings || []).some(f => (f.status || '').toLowerCase() !== 'normal') ? 'Attention Needed' : 'Normal'}
                             </Badge>
                             <Button
                               variant="ghost"
@@ -559,7 +576,7 @@ const ReportUploadComponent = () => {
                                 <div>
                                   <p className="font-semibold text-slate-900 mb-1">Top Findings</p>
                                   <ul className="space-y-1">
-                                    {r.analysis?.findings?.slice(0, 3).map((f, i) => (
+                                    {(r.analysis?.findings || []).slice(0, 3).map((f, i) => (
                                       <li key={i} className="flex justify-between text-slate-600 border-b border-slate-50 pb-1 last:border-0">
                                         <span>{f.parameter}</span>
                                         <span className="font-medium text-slate-900">{f.value}</span>

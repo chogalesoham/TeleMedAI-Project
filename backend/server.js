@@ -1,10 +1,18 @@
 const express = require('express');
 const cors = require('cors');
+const http = require('http');
 require('dotenv').config();
 const connectDB = require('./config/database');
+const initializeSignaling = require('./signaling');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// Create HTTP server
+const server = http.createServer(app);
+
+// Initialize Socket.IO signaling
+initializeSignaling(server);
 
 // Connect to MongoDB
 connectDB();
@@ -36,7 +44,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/ai', require('./routes/preDiagnosis'));
 
 // Start Server
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log('='.repeat(50));
   console.log('🚀 TeleMedAI Backend Server Started!');
   console.log(`📡 Server running on port ${PORT}`);
@@ -45,3 +53,4 @@ app.listen(PORT, () => {
 });
 
 module.exports = app;
+

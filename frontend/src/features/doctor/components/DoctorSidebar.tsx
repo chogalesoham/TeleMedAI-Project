@@ -11,7 +11,10 @@ import {
   Stethoscope,
   ClipboardList,
   CheckCircle,
-  History
+  History,
+  Video,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -39,6 +42,12 @@ const menuItems = [
     icon: History,
     path: '/doctor-dashboard/appointment-history',
     description: 'Past appointments'
+  },
+  {
+    title: 'Live Consultation',
+    icon: Video,
+    path: '/doctor-dashboard/live-consultation',
+    description: 'Video consultation'
   },
   {
     title: 'Patient Queue',
@@ -86,20 +95,30 @@ export const DoctorSidebar = ({ isOpen, setIsOpen }: DoctorSidebarProps) => {
 
       {/* Sidebar */}
       <div
-        className={`w-72 bg-white border-r border-gray-200 shadow-xl fixed h-full z-50 top-0 left-0 transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+        className={`w-72 bg-white border-r border-gray-200 shadow-xl fixed h-full z-50 top-0 left-0 transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
       >
         <div className="flex flex-col h-full">
-          {/* Header */}
+          {/* Header with Close Button */}
           <div className="p-6 border-b border-gray-200">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
-                <Stethoscope className="w-5 h-5 text-white" />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+                  <Stethoscope className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">Dr. Arun Gupta</h3>
+                  <p className="text-xs text-gray-500">General Physician</p>
+                </div>
               </div>
-              <div>
-                <h3 className="font-semibold">Dr. Arun Gupta</h3>
-                <p className="text-xs text-gray-500">General Physician</p>
-              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsOpen(false)}
+                className="h-8 w-8 text-gray-500 hover:text-gray-900"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </Button>
             </div>
           </div>
 
@@ -113,8 +132,8 @@ export const DoctorSidebar = ({ isOpen, setIsOpen }: DoctorSidebarProps) => {
                   key={item.title}
                   to={item.path}
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${isActive
-                      ? 'bg-blue-50 text-blue-600 border border-blue-200'
-                      : 'hover:bg-gray-50 text-gray-600'
+                    ? 'bg-blue-50 text-blue-600 border border-blue-200'
+                    : 'hover:bg-gray-50 text-gray-600'
                     }`}
                 >
                   <item.icon className="w-5 h-5" />

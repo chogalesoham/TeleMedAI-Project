@@ -88,7 +88,7 @@ export const MyAppointments = ({ defaultTab = 'all' }: MyAppointmentsProps) => {
     });
     const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
     const [isDetailsOpen, setIsDetailsOpen] = useState(false);
-    const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+    const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
     const [showFilters, setShowFilters] = useState(false);
 
     const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -135,8 +135,8 @@ export const MyAppointments = ({ defaultTab = 'all' }: MyAppointmentsProps) => {
         }
     };
 
-    const handleJoinCall = (_id: string) => {
-        toast.info('Video call feature coming soon!');
+    const handleJoinCall = (id: string) => {
+        navigate(`/patient-dashboard/live-consultation?consultationId=${id}`);
     };
 
     const handleViewDetails = (id: string) => {
@@ -325,10 +325,10 @@ export const MyAppointments = ({ defaultTab = 'all' }: MyAppointmentsProps) => {
             );
         }
 
-        const containerClass =
-            viewMode === 'grid'
-                ? 'grid gap-4 md:grid-cols-2 xl:grid-cols-3'
-                : 'flex flex-col gap-4';
+        // Always use grid layout with improved responsive breakpoints
+        const containerClass = viewMode === 'grid'
+            ? 'grid gap-5 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-3'
+            : 'flex flex-col gap-5';
 
         return (
             <div className={containerClass}>
@@ -434,12 +434,13 @@ export const MyAppointments = ({ defaultTab = 'all' }: MyAppointmentsProps) => {
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-3">
-                    {stats.map((stat) => (
+                    {stats.map((stat, index) => (
                         <motion.div
                             key={stat.label}
                             initial={{ opacity: 0, y: 8 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="rounded-2xl border bg-card p-4 shadow-sm"
+                            transition={{ delay: index * 0.1 }}
+                            className="rounded-2xl border bg-card p-4 shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105 cursor-pointer"
                         >
                             <p className="text-sm text-muted-foreground">{stat.label}</p>
                             <p className="mt-2 text-3xl font-semibold">{stat.value}</p>
@@ -448,14 +449,20 @@ export const MyAppointments = ({ defaultTab = 'all' }: MyAppointmentsProps) => {
                     ))}
                 </div>
 
-                <div className="rounded-2xl border bg-card p-4 shadow-sm">
-                    <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                        <div className="flex items-center gap-2 text-sm font-medium">
-                            <SlidersHorizontal className="h-4 w-4 text-primary" />
-                            Smart filters
+                {/* Enhanced Filter Section */}
+                <div className="rounded-2xl border bg-gradient-to-br from-white to-gray-50 p-5 shadow-sm">
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                        <div className="flex items-center gap-2.5">
+                            <div className="rounded-full bg-primary/10 p-2">
+                                <SlidersHorizontal className="h-4 w-4 text-primary" />
+                            </div>
+                            <div>
+                                <h3 className="text-sm font-semibold text-gray-900">Smart Filters</h3>
+                                <p className="text-xs text-gray-500">Refine your appointments</p>
+                            </div>
                         </div>
                         <div className="flex flex-wrap items-center gap-2">
-                            <div className="flex items-center rounded-full border bg-muted px-1 py-1">
+                            <div className="flex items-center rounded-xl border-2 bg-white px-1.5 py-1.5 shadow-sm">
                                 {(['list', 'grid'] as Array<'list' | 'grid'>).map((mode) => {
                                     const Icon = mode === 'list' ? List : LayoutGrid;
                                     return (
@@ -463,7 +470,7 @@ export const MyAppointments = ({ defaultTab = 'all' }: MyAppointmentsProps) => {
                                             key={mode}
                                             variant={viewMode === mode ? 'default' : 'ghost'}
                                             size="sm"
-                                            className={`h-8 w-8 rounded-full p-0 ${viewMode === mode ? 'shadow' : ''}`}
+                                            className={`h-8 w-8 rounded-lg p-0 ${viewMode === mode ? 'shadow-md' : ''}`}
                                             onClick={() => setViewMode(mode)}
                                             aria-label={`Switch to ${mode} view`}
                                         >
@@ -473,24 +480,25 @@ export const MyAppointments = ({ defaultTab = 'all' }: MyAppointmentsProps) => {
                                 })}
                             </div>
                             <Button
-                                variant="ghost"
+                                variant="outline"
                                 size="sm"
-                                className="lg:hidden"
+                                className="lg:hidden border-2"
                                 onClick={() => setShowFilters((prev) => !prev)}
                             >
                                 <Filter className="mr-2 h-4 w-4" />
-                                {showFilters ? 'Hide filters' : 'Show filters'}
+                                {showFilters ? 'Hide' : 'Show'} Filters
                             </Button>
                             <Button
                                 variant="outline"
                                 size="sm"
                                 onClick={resetFilters}
                                 disabled={!activeFiltersCount}
+                                className="border-2 hover:border-red-300 hover:bg-red-50"
                             >
                                 <FilterX className="mr-2 h-4 w-4" />
                                 Clear
                                 {activeFiltersCount > 0 && (
-                                    <Badge className="ml-2 bg-primary/10 text-primary">
+                                    <Badge className="ml-2 bg-red-500 text-white">
                                         {activeFiltersCount}
                                     </Badge>
                                 )}
@@ -498,15 +506,17 @@ export const MyAppointments = ({ defaultTab = 'all' }: MyAppointmentsProps) => {
                         </div>
                     </div>
 
-                    <div className="mt-4 flex flex-wrap gap-2">
+                    {/* Quick Status Chips */}
+                    <div className="mt-5 flex flex-wrap gap-2">
                         {quickStatuses.map((chip) => (
                             <Button
                                 key={chip.value}
                                 size="sm"
                                 variant={filters.status === chip.value ? 'default' : 'secondary'}
-                                className={`rounded-full px-3 py-1 text-xs ${
-                                    filters.status === chip.value ? '' : 'bg-muted text-muted-foreground'
-                                }`}
+                                className={`rounded-full px-4 py-2 text-xs font-semibold transition-all ${filters.status === chip.value
+                                    ? 'shadow-md scale-105'
+                                    : 'bg-white border-2 text-gray-700 hover:border-primary hover:text-primary'
+                                    }`}
                                 onClick={() => handleQuickStatus(chip.value)}
                             >
                                 {chip.label}
@@ -514,17 +524,17 @@ export const MyAppointments = ({ defaultTab = 'all' }: MyAppointmentsProps) => {
                         ))}
                     </div>
 
+                    {/* Filter Inputs */}
                     <div
-                        className={`mt-4 grid gap-4 lg:grid-cols-4 ${
-                            showFilters ? 'grid' : 'hidden lg:grid'
-                        }`}
+                        className={`mt-5 grid gap-4 lg:grid-cols-4 ${showFilters ? 'grid' : 'hidden lg:grid'
+                            }`}
                     >
                         <div className="lg:col-span-2">
                             <div className="relative">
-                                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                 <Input
-                                    className="pl-9"
-                                    placeholder="Search by doctor, reason, or status"
+                                    className="pl-10 border-2 focus:border-primary rounded-xl"
+                                    placeholder="Search by doctor, reason, or status..."
                                     value={searchQuery}
                                     onChange={(event) => setSearchQuery(event.target.value)}
                                 />
@@ -536,8 +546,8 @@ export const MyAppointments = ({ defaultTab = 'all' }: MyAppointmentsProps) => {
                                 setFilters((prev) => ({ ...prev, doctor: value }))
                             }
                         >
-                            <SelectTrigger>
-                                <SelectValue placeholder="Doctor" />
+                            <SelectTrigger className="border-2 rounded-xl">
+                                <SelectValue placeholder="All Doctors" />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">All doctors</SelectItem>
@@ -554,8 +564,8 @@ export const MyAppointments = ({ defaultTab = 'all' }: MyAppointmentsProps) => {
                                 setFilters((prev) => ({ ...prev, status: value }))
                             }
                         >
-                            <SelectTrigger>
-                                <SelectValue placeholder="Status" />
+                            <SelectTrigger className="border-2 rounded-xl">
+                                <SelectValue placeholder="All Status" />
                             </SelectTrigger>
                             <SelectContent>
                                 {statusOptions.map((option) => (
@@ -566,20 +576,30 @@ export const MyAppointments = ({ defaultTab = 'all' }: MyAppointmentsProps) => {
                             </SelectContent>
                         </Select>
                         <div className="grid gap-4 sm:grid-cols-2 lg:col-span-2">
-                            <Input
-                                type="date"
-                                value={filters.from}
-                                onChange={(event) =>
-                                    setFilters((prev) => ({ ...prev, from: event.target.value }))
-                                }
-                            />
-                            <Input
-                                type="date"
-                                value={filters.to}
-                                onChange={(event) =>
-                                    setFilters((prev) => ({ ...prev, to: event.target.value }))
-                                }
-                            />
+                            <div className="relative">
+                                <Calendar className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground z-10" />
+                                <Input
+                                    type="date"
+                                    className="pl-10 border-2 rounded-xl"
+                                    placeholder="From date"
+                                    value={filters.from}
+                                    onChange={(event) =>
+                                        setFilters((prev) => ({ ...prev, from: event.target.value }))
+                                    }
+                                />
+                            </div>
+                            <div className="relative">
+                                <Calendar className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground z-10" />
+                                <Input
+                                    type="date"
+                                    className="pl-10 border-2 rounded-xl"
+                                    placeholder="To date"
+                                    value={filters.to}
+                                    onChange={(event) =>
+                                        setFilters((prev) => ({ ...prev, to: event.target.value }))
+                                    }
+                                />
+                            </div>
                         </div>
                     </div>
                 </div>

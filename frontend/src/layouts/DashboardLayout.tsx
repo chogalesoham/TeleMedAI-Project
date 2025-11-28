@@ -17,21 +17,21 @@ export const DashboardLayout = () => {
       {isDoctorDashboard && (
         <>
           <DoctorSidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
-          
-          {/* Mobile Menu Button */}
-          <div className="lg:hidden fixed top-4 left-4 z-40">
+
+          {/* Menu Toggle Button - Always visible */}
+          <div className="fixed top-4 left-4 z-40">
             <Button
               variant="outline"
               size="sm"
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="bg-white/80 backdrop-blur-sm border-gray-200"
+              className="bg-white/80 backdrop-blur-sm border-gray-200 shadow-md"
             >
               <Menu className="w-4 h-4" />
             </Button>
           </div>
 
-          {/* Main Content with margin for fixed sidebar */}
-          <div className="ml-0 lg:ml-72">
+          {/* Main Content - No left margin since sidebar is closed by default */}
+          <div className="ml-0">
             <Outlet />
           </div>
         </>

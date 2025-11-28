@@ -45,6 +45,8 @@ export interface Appointment {
     payment: AppointmentPayment;
     videoCallEnabled: boolean;
     videoCallLink?: string;
+    meetCode?: string;
+    meetCodeGeneratedAt?: Date;
     doctorNotes?: string;
     rejectionReason?: string;
     cancellationReason?: string;

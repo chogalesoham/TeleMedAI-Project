@@ -132,6 +132,14 @@ const appointmentSchema = new mongoose.Schema({
     videoCallEndedAt: {
         type: Date
     },
+    meetCode: {
+        type: String,
+        default: '',
+        sparse: true  // Allows multiple empty values, unique only when set
+    },
+    meetCodeGeneratedAt: {
+        type: Date
+    },
 
     // Appointment Notes
     doctorNotes: {
@@ -186,9 +194,26 @@ appointmentSchema.methods.updateStatus = function (newStatus, userId, notes = ''
     if (newStatus === 'confirmed') {
         this.confirmedAt = new Date();
         this.videoCallEnabled = this.consultationMode === 'tele';
+
+        // Generate unique meet code for tele consultations
+        if (this.consultationMode === 'tele' && !this.meetCode) {
+            this.meetCode = this.generateMeetCode();
+            this.meetCodeGeneratedAt = new Date();
+        }
     } else if (newStatus === 'completed') {
         this.completedAt = new Date();
     }
+};
+
+// Method to generate unique meet code
+appointmentSchema.methods.generateMeetCode = function () {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let code = '';
+    for (let i = 0; i < 8; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    // Format as XXX-XXX-XX
+    return `${code.slice(0, 3)}-${code.slice(3, 6)}-${code.slice(6, 8)}`;
 };
 
 // Virtual for appointment duration

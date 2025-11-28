@@ -5,3 +5,4 @@ export { default as Appointments } from './components/Appointments';
 export { default as Reports } from './components/Reports';
 export { default as Analytics } from './components/Analytics';
 export { default as Settings } from './components/Settings';
+export { LiveConsultation } from './pages/LiveConsultation';

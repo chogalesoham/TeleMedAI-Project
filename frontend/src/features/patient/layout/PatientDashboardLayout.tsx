@@ -311,7 +311,7 @@ const PatientDashboardLayout = () => {
           ${sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'}
         `}
       >
-        <div className="p-3 sm:p-4 md:p-6 max-w-[100vw] overflow-x-hidden">
+        <div className="p-3 sm:p-2 md:p-2 max-w-[100vw] overflow-x-hidden">
           <Outlet />
         </div>
       </main>
