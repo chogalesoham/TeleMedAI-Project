@@ -5,21 +5,20 @@ from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 from report_analyzer import process_report_file
 from consulatation_handler import process_consultation
-from pre_diagnosis import process_pre_diagnosis
 from agent_service import chat_with_agent
 from typing import Dict, Optional, List, Any
 from pydantic import BaseModel
 import uvicorn
+from datetime import datetime
 
 load_dotenv()
 
 app = FastAPI(
     title="Telemedicine AI API",
-    description="AI-powered medical services: Report Analysis & Consultation Processing",
-    version="1.0.0"
+    description="AI-powered medical services with prescription generation",
+    version="2.0.0"
 )
 
-# Configure CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  
@@ -28,30 +27,28 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Configuration
 ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg'}
-MAX_FILE_SIZE = 16 * 1024 * 1024  
+MAX_FILE_SIZE = 25 * 1024 * 1024  
 ALLOWED_AUDIO_EXTENSIONS = {'mp3', 'wav', 'ogg', 'webm', 'm4a', 'flac'}
 
 def allowed_file(filename: str) -> bool:
-    """Check if file extension is allowed"""
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def get_file_extension(filename: str) -> str:
-    """Get file extension"""
     return filename.rsplit('.', 1)[1].lower() if '.' in filename else ''
 
-# --- Health Check Endpoint ---
 @app.get("/", tags=["Health"])
 async def root():
-    """Root endpoint - API information"""
     return {
-        "message": "Telemedicine Report Analyzer API",
+        "message": "Telemedicine AI API",
         "status": "healthy",
-        "version": "1.0.0",
+        "version": "2.0.0",
         "endpoints": {
-            "report_analysis": "/api/v1/reports/analyze",
+            "report_analysis": "/ai/report-analyze",
             "consultation_processing": "/api/v1/consultation/process",
+            "pre_diagnosis": "/api/v1/pre-diagnosis",
+            "agent_chat": "/api/v1/agent/chat",
+            "chat_diagnosis": "/initial-problem, /next-question, /final-summary",
             "health": "/health",
             "docs": "/docs"
         }
@@ -59,57 +56,38 @@ async def root():
 
 @app.get("/health", tags=["Health"])
 async def health_check():
-    """Health check endpoint"""
-    return {
-        "status": "healthy",
-        "service": "Telemedicine Report Analyzer"
-    }
+    return {"status": "healthy", "service": "Telemedicine AI"}
 
-from datetime import datetime
-
-# --- New AI Report Analyze Endpoint ---
 @app.post("/ai/report-analyze", tags=["AI Analysis"])
 async def ai_report_analyze(
     file: UploadFile = File(...),
     document_type: str = Form(...),
     notes: Optional[str] = Form(None)
 ) -> Dict:
-    """
-    Analyze medical report (PDF or image) using Groq Llama 3.3
-    Accepts multipart/form-data: file, document_type, notes
-    Returns structured JSON: { success, message, reportMeta, analysis }
-    """
-    # Validate filename
+    """Analyze medical report (PDF or image)"""
     if not file.filename:
         raise HTTPException(status_code=400, detail="No file selected")
 
-    # Validate file type
     if not allowed_file(file.filename):
         raise HTTPException(
             status_code=400,
-            detail=f"Invalid file type. Allowed types: {', '.join(ALLOWED_EXTENSIONS)}"
+            detail=f"Invalid file type. Allowed: {', '.join(ALLOWED_EXTENSIONS)}"
         )
 
-    # Check file size
     contents = await file.read()
     file_size = len(contents)
     if file_size > MAX_FILE_SIZE:
-        raise HTTPException(
-            status_code=400,
-            detail=f"File too large. Maximum size: {MAX_FILE_SIZE / (1024*1024)}MB"
-        )
+        raise HTTPException(status_code=400, detail=f"File too large (max 25MB)")
     await file.seek(0)
 
     try:
         file_type = get_file_extension(file.filename)
         uploaded_at = datetime.utcnow().isoformat()
 
-        # Process the report (extract text + AI analysis)
         result = await process_report_file(file, file_type)
         if "error" in result:
             raise HTTPException(status_code=500, detail=result["error"])
 
-        # Compose reportMeta
         report_meta = {
             "fileName": file.filename,
             "fileType": file_type,
@@ -119,7 +97,6 @@ async def ai_report_analyze(
             "uploadedAt": uploaded_at
         }
 
-        # Compose response
         response = {
             "success": True,
             "message": "Report analyzed successfully.",
@@ -131,24 +108,27 @@ async def ai_report_analyze(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Processing failed: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Processing failed: {str(e)}")
 
-# --- NEW: Consultation Processing Endpoint ---
 @app.post("/api/v1/consultation/process", tags=["Consultation"])
-async def process_consultation_endpoint(file: UploadFile = File(...)) -> Dict:
+async def process_consultation_endpoint(
+    file: UploadFile = File(...),
+    patient_data: str = Form(...)  # JSON string of patient data
+) -> Dict:
     """
-    Process consultation audio recording
+    Process consultation audio and generate prescription
     
-    - **file**: Audio file (MP3, WAV, OGG, WEBM, M4A, FLAC)
+    - **file**: Audio file (MP3, WAV, etc.)
+    - **patient_data**: JSON string containing patient's complete health data
     
-    Returns:
-    - Full transcription
-    - Doctor summary (detailed, medical terminology)
-    - Patient summary (simple, actionable)
-    - Key symptoms, diagnosis, medications, follow-up instructions
+    Expected patient_data format:
+    {
+        "basicHealthProfile": {...},
+        "medicalHistory": {...},
+        "currentHealthStatus": {...}
+    }
+    
+    Returns: Transcription, consultation summary, and generated prescription
     """
     if not file.filename:
         raise HTTPException(status_code=400, detail="No file selected")
@@ -166,8 +146,15 @@ async def process_consultation_endpoint(file: UploadFile = File(...)) -> Dict:
     
     await file.seek(0)
     
+    # Parse patient data
     try:
-        result = await process_consultation(file)
+        import json
+        patient_info = json.loads(patient_data)
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=400, detail="Invalid patient_data JSON format")
+    
+    try:
+        result = await process_consultation(file, patient_info)
         if "error" in result:
             raise HTTPException(status_code=500, detail=result["error"])
         return JSONResponse(content=result, status_code=200)
@@ -175,29 +162,19 @@ async def process_consultation_endpoint(file: UploadFile = File(...)) -> Dict:
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Processing failed: {str(e)}")
-
+    
 @app.post("/api/v1/pre-diagnosis", tags=["Pre-Diagnosis"])
 async def pre_diagnosis_endpoint(
     symptoms: Optional[str] = Form(None),
     audio: Optional[UploadFile] = File(None)
 ) -> Dict:
-    """
-    Pre-diagnosis based on symptoms (text or audio)
-    
-    - **symptoms**: Text description of symptoms (optional if audio provided)
-    - **audio**: Audio file with symptoms description (optional if text provided)
-    
-    Returns possible conditions, severity, and recommendations
-    """
-    
-    # Validate input
+    """Pre-diagnosis based on symptoms (text or audio)"""
     if not symptoms and not audio:
         raise HTTPException(
             status_code=400,
             detail="Either symptoms text or audio file must be provided"
         )
     
-    # Validate audio if provided
     if audio and audio.filename:
         file_ext = get_file_extension(audio.filename)
         if file_ext not in ALLOWED_AUDIO_EXTENSIONS:
@@ -213,6 +190,7 @@ async def pre_diagnosis_endpoint(
         await audio.seek(0)
     
     try:
+        from pre_diagnosis import process_pre_diagnosis
         result = await process_pre_diagnosis(symptoms_text=symptoms, audio_file=audio)
         if "error" in result:
             raise HTTPException(status_code=500, detail=result["error"])
@@ -222,8 +200,6 @@ async def pre_diagnosis_endpoint(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Processing failed: {str(e)}")
 
-
-# --- Agentic Chat Endpoint ---
 class ChatRequest(BaseModel):
     userId: str
     message: str
@@ -231,40 +207,19 @@ class ChatRequest(BaseModel):
 
 @app.post("/api/v1/agent/chat", tags=["Agent"])
 async def agent_chat_endpoint(request: ChatRequest):
-    """
-    Chat with the Agentic AI Health Assistant.
-    Requires userId to fetch patient context.
-    """
+    """Chat with Agentic AI Health Assistant"""
     if not request.userId:
         raise HTTPException(status_code=400, detail="userId is required")
         
     result = await chat_with_agent(request.userId, request.message, request.history)
     
     if "error" in result:
-        # If it's a "data not found" error, maybe 404, but 500 or 400 is safer for now unless specific
         if result["error"] == "Patient data not found":
-             raise HTTPException(status_code=404, detail=result["response"])
+            raise HTTPException(status_code=404, detail=result["response"])
         raise HTTPException(status_code=500, detail=result["error"])
         
     return result
 
-
-# --- Error Handlers ---
-@app.exception_handler(404)
-async def not_found_handler(request, exc):
-    return JSONResponse(
-        status_code=404,
-        content={"error": "Endpoint not found"}
-    )
-
-@app.exception_handler(500)
-async def internal_error_handler(request, exc):
-    return JSONResponse(
-        status_code=500,
-        content={"error": "Internal server error"}
-    )
-
-# --- Chat Diagnosis Endpoints ---
 from chat_diagnosis import (
     analyze_initial_problem,
     generate_next_question,
@@ -314,10 +269,13 @@ async def final_summary_endpoint(request: FinalSummaryRequest):
         raise HTTPException(status_code=500, detail=result["error"])
     return result
 
+@app.exception_handler(404)
+async def not_found_handler(request, exc):
+    return JSONResponse(status_code=404, content={"error": "Endpoint not found"})
+
+@app.exception_handler(500)
+async def internal_error_handler(request, exc):
+    return JSONResponse(status_code=500, content={"error": "Internal server error"})
+
 if __name__ == "__main__":
-    uvicorn.run(
-        "app:app",
-        host="0.0.0.0",
-        port=8000,
-        reload=True
-    )
+    uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)
