@@ -3,12 +3,38 @@ import { io, Socket } from 'socket.io-client';
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
 
-// ICE servers for NAT traversal (using free public STUN servers)
+// ICE servers for NAT traversal (using multiple public STUN servers + TURN server)
 const ICE_SERVERS = {
     iceServers: [
+        // Google STUN servers
         { urls: 'stun:stun.l.google.com:19302' },
         { urls: 'stun:stun1.l.google.com:19302' },
+        { urls: 'stun:stun2.l.google.com:19302' },
+        { urls: 'stun:stun3.l.google.com:19302' },
+        { urls: 'stun:stun4.l.google.com:19302' },
+
+        // Additional STUN servers for redundancy
+        { urls: 'stun:stun.services.mozilla.com' },
+        { urls: 'stun:stun.stunprotocol.org:3478' },
+
+        // Free TURN server from Metered (for NAT traversal when STUN fails)
+        {
+            urls: 'turn:a.relay.metered.ca:80',
+            username: 'openrelayproject',
+            credential: 'openrelayproject',
+        },
+        {
+            urls: 'turn:a.relay.metered.ca:443',
+            username: 'openrelayproject',
+            credential: 'openrelayproject',
+        },
+        {
+            urls: 'turn:a.relay.metered.ca:443?transport=tcp',
+            username: 'openrelayproject',
+            credential: 'openrelayproject',
+        },
     ],
+    iceCandidatePoolSize: 10, // Pre-gather ICE candidates for faster connection
 };
 
 type ConnectionQuality = 'excellent' | 'good' | 'poor' | 'disconnected';
@@ -112,12 +138,28 @@ export const useWebRTC = ({ consultationId, userType }: UseWebRTCProps) => {
         // Handle ICE candidates
         pc.onicecandidate = (event) => {
             if (event.candidate && socketRef.current) {
-                console.log('🧊 Sending ICE candidate');
+                console.log('🧊 Sending ICE candidate:', event.candidate.type, event.candidate.candidate);
                 socketRef.current.emit('ice-candidate', {
                     consultationId,
                     candidate: event.candidate,
                 });
+            } else if (!event.candidate) {
+                console.log('✅ ICE gathering complete');
             }
+        };
+
+        // Monitor ICE connection state
+        pc.oniceconnectionstatechange = () => {
+            console.log('🔗 ICE connection state:', pc.iceConnectionState);
+            if (pc.iceConnectionState === 'failed') {
+                console.error('❌ ICE connection failed - trying to restart ICE');
+                pc.restartIce();
+            }
+        };
+
+        // Monitor ICE gathering state
+        pc.onicegatheringstatechange = () => {
+            console.log('📡 ICE gathering state:', pc.iceGatheringState);
         };
 
         // Monitor connection state
