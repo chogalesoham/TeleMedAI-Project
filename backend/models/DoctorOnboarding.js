@@ -64,6 +64,41 @@ const doctorOnboardingSchema = new mongoose.Schema({
         default: ''
     },
 
+    // Step 2: Clinic/Practice Location
+    clinicLocation: {
+        address: {
+            type: String,
+            default: ''
+        },
+        city: {
+            type: String,
+            default: ''
+        },
+        state: {
+            type: String,
+            default: ''
+        },
+        country: {
+            type: String,
+            default: 'India'
+        },
+        zipCode: {
+            type: String,
+            default: ''
+        },
+        coordinates: {
+            type: {
+                type: String,
+                enum: ['Point'],
+                default: 'Point'
+            },
+            coordinates: {
+                type: [Number], // [longitude, latitude]
+                default: [0, 0]
+            }
+        }
+    },
+
     // Step 3: Availability Schedule
     availability: {
         type: [{
@@ -123,7 +158,7 @@ const doctorOnboardingSchema = new mongoose.Schema({
         type: String,
         default: ''
     },
- 
+
     // Onboarding Progress Tracking
     onboardingProgress: {
         step1Completed: { type: Boolean, default: false },
@@ -144,6 +179,10 @@ const doctorOnboardingSchema = new mongoose.Schema({
 
 // Add index for medical registration number
 doctorOnboardingSchema.index({ medicalRegistrationNumber: 1 }, { unique: true, sparse: true });
+
+// Add geospatial index for location-based queries
+doctorOnboardingSchema.index({ 'clinicLocation.coordinates': '2dsphere' });
+
 
 // Method to check if onboarding is complete
 doctorOnboardingSchema.methods.checkOnboardingComplete = function () {

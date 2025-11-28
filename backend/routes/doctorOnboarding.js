@@ -5,10 +5,19 @@ const {
     getOnboardingStatus,
     saveOnboardingData,
     getOnboardingData,
-    updatePracticeDetails
+    updatePracticeDetails,
+    getNearbyDoctors
 } = require('../controllers/doctorOnboardingController');
 
-// All routes are protected and require doctor authentication
+/**
+ * @route   GET /api/doctor/onboarding/nearby
+ * @desc    Get nearby doctors (public endpoint for patients)
+ * @access  Public
+ * @query   latitude, longitude, maxDistance, specialty, consultationMode
+ */
+router.get('/nearby', getNearbyDoctors);
+
+// All routes below are protected and require doctor authentication
 router.use(authMiddleware);
 router.use(doctorOnly);
 

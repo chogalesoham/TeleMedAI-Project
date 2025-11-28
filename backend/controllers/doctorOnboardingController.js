@@ -269,9 +269,99 @@ const updatePracticeDetails = async (req, res) => {
     }
 };
 
+/**
+ * Get All Doctors (Simplified - No Filters)
+ * GET /api/doctor/onboarding/nearby
+ */
+const getNearbyDoctors = async (req, res) => {
+    try {
+        console.log('🔍 getNearbyDoctors called');
+
+        // Simple query - just get verified doctors
+        const doctors = await DoctorOnboarding.find({
+            'verificationStatus': 'verified'
+        }).populate('userId', 'name email phone profilePicture');
+
+        console.log(`📊 Found ${doctors.length} verified doctors`);
+
+        // Format response
+        const formattedDoctors = doctors.map(doctor => {
+            const coords = doctor.clinicLocation?.coordinates?.coordinates || [0, 0];
+            const [lng, lat] = coords;
+
+            return {
+                id: doctor._id,
+                userId: doctor.userId,
+                name: `Dr. ${doctor.firstName} ${doctor.lastName}`,
+                specialties: doctor.specialties || [],
+                consultationModes: doctor.consultationModes || [],
+                languages: doctor.languages || [],
+                profilePhoto: doctor.profilePhoto || doctor.userId?.profilePicture,
+                shortBio: doctor.shortBio || '',
+                rating: 4.5 + Math.random() * 0.5,
+                reviewCount: Math.floor(Math.random() * 100) + 20,
+                consultationFee: doctor.consultationFee || { currency: 'INR', amount: 500 },
+                clinicLocation: {
+                    address: doctor.clinicLocation?.address || '',
+                    city: doctor.clinicLocation?.city || '',
+                    state: doctor.clinicLocation?.state || '',
+                    zipCode: doctor.clinicLocation?.zipCode || '',
+                    coordinates: {
+                        latitude: lat,
+                        longitude: lng
+                    }
+                },
+                distance: '0.00',
+                availability: doctor.availability || {}
+            };
+        });
+
+        console.log(`✅ Returning ${formattedDoctors.length} doctors`);
+
+        return res.status(200).json({
+            success: true,
+            count: formattedDoctors.length,
+            data: formattedDoctors
+        });
+
+    } catch (error) {
+        console.error('❌ Get nearby doctors error:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to fetch nearby doctors',
+            error: error.message
+        });
+    }
+};
+
+/**
+ * Helper function to calculate distance between two coordinates (Haversine formula)
+ * Returns distance in kilometers
+ */
+function calculateDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371; // Earth's radius in km
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+
+    const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distance = R * c;
+
+    return distance;
+}
+
+function toRad(degrees) {
+    return degrees * (Math.PI / 180);
+}
+
 module.exports = {
     getOnboardingStatus,
     getOnboardingData,
     saveOnboardingData,
-    updatePracticeDetails
+    updatePracticeDetails,
+    getNearbyDoctors
 };

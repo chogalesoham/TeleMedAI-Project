@@ -12,10 +12,19 @@ const MyReports = () => {
     const [reports, setReports] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
-    const userId = "6745d606305607062483804d";
+
+    // Get actual logged-in user ID from localStorage
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const userId = user._id || user.id;
 
     useEffect(() => {
         const fetchReports = async () => {
+            if (!userId) {
+                console.error('No user ID found');
+                setIsLoading(false);
+                return;
+            }
+
             try {
                 const data = await aiService.getUserReports(userId);
                 setReports(data.data);
@@ -27,7 +36,7 @@ const MyReports = () => {
         };
 
         fetchReports();
-    }, []);
+    }, [userId]);
 
     const filteredReports = reports.filter((report: any) =>
         report.summary.toLowerCase().includes(searchTerm.toLowerCase()) ||

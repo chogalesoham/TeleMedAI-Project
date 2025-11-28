@@ -1,6 +1,13 @@
 import { useState, useRef, useEffect } from 'react';
 import { getStoredUser } from '../../../services/auth.service';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import {
+  createMedicalReport,
+  getUserMedicalReports,
+  MedicalReport as MedicalReportType,
+  Analysis,
+  Finding
+} from '@/services/medicalReport.service';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -48,28 +55,6 @@ interface ReportMeta {
   uploadedAt: string;
 }
 
-interface Analysis {
-  report_type: string;
-  findings: Array<{
-    parameter: string;
-    value: string;
-    normal_range: string;
-    status: string;
-  }>;
-  summary: string;
-  recommendations: string[];
-  concerns: string[];
-  disclaimer: string;
-}
-
-interface SavedReport {
-  _id: string;
-  userId: string;
-  reportMeta: ReportMeta;
-  analysis: Analysis;
-  createdAt: string;
-  updatedAt: string;
-}
 
 const ReportUploadComponent = () => {
   const userProfile = getStoredUser();
@@ -79,7 +64,7 @@ const ReportUploadComponent = () => {
   const [aiResult, setAiResult] = useState<{ reportMeta: ReportMeta; analysis: Analysis } | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
-  const [myReports, setMyReports] = useState<SavedReport[]>([]);
+  const [myReports, setMyReports] = useState<MedicalReportType[]>([]);
   const [showDetailsId, setShowDetailsId] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('lab-report');
@@ -102,20 +87,8 @@ const ReportUploadComponent = () => {
 
   const fetchMyReports = async () => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/reports/user/${userId}`);
-
-      // Defensive handling: API may return array or wrapped object { data: [...], reports: [...] } etc.
-      let reports: any = res.data;
-
-      // if server uses { data: [...] } or { reports: [...] }
-      if (!Array.isArray(reports)) {
-        if (Array.isArray(res.data.data)) reports = res.data.data;
-        else if (Array.isArray(res.data.reports)) reports = res.data.reports;
-        else if (res.data && typeof res.data === 'object' && Array.isArray((res.data as any).results)) reports = (res.data as any).results;
-        else reports = []; // fallback
-      }
-
-      setMyReports(reports as SavedReport[]);
+      const { reports } = await getUserMedicalReports(userId);
+      setMyReports(reports);
     } catch (err) {
       console.error('Failed to fetch reports', err);
       setMyReports([]);
@@ -196,12 +169,16 @@ const ReportUploadComponent = () => {
     if (!aiResult || !aiResult.reportMeta) return;
     setSaveStatus('saving');
     try {
-      const payload = {
+      await createMedicalReport({
         userId,
-        ...aiResult.reportMeta,
-        analysis: aiResult.analysis ?? {},
-      };
-      await axios.post('http://localhost:5000/api/reports', payload);
+        fileName: aiResult.reportMeta.fileName,
+        fileType: aiResult.reportMeta.fileType,
+        fileSize: aiResult.reportMeta.fileSize,
+        documentType: aiResult.reportMeta.documentType,
+        notes: aiResult.reportMeta.notes,
+        uploadedAt: aiResult.reportMeta.uploadedAt,
+        analysis: aiResult.analysis as Analysis
+      });
       setSaveStatus('saved');
       fetchMyReports();
     } catch (err) {
