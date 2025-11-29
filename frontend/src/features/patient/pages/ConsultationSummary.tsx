@@ -1,8 +1,8 @@
 import { motion } from 'framer-motion';
-import { 
-  CheckCircle2, 
-  Download, 
-  Share2, 
+import {
+  CheckCircle2,
+  Download,
+  Share2,
   Calendar,
   Clock,
   FileText,
@@ -18,66 +18,125 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import ConsultationService from '@/services/consultation.service';
+import { Loader2 } from 'lucide-react';
 
 export const ConsultationSummary = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const consultationId = searchParams.get('consultationId');
+
+  const [consultationData, setConsultationData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [rating, setRating] = useState(0);
   const [feedback, setFeedback] = useState('');
 
+  useEffect(() => {
+    const fetchConsultation = async () => {
+      if (!consultationId) {
+        setError('No consultation ID provided');
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const response = await ConsultationService.getConsultationResult(consultationId);
+        if (response.success && response.data) {
+          setConsultationData(response.data);
+        } else {
+          // Fallback to state data if fetch fails
+          if (location.state?.consultationData) {
+            setConsultationData({
+              ...location.state.consultationData,
+              appointment: {
+                _id: consultationId,
+                doctor: { name: 'Doctor', specialization: 'Specialist' },
+                appointmentDate: new Date()
+              },
+              createdAt: new Date()
+            });
+          } else {
+            setError(response.error || 'Failed to load consultation details');
+          }
+        }
+      } catch (err) {
+        console.error('Error loading consultation:', err);
+        setError('An error occurred while loading the consultation');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchConsultation();
+  }, [consultationId, location.state]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-[calc(100vh-8rem)]">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <span className="ml-2 text-gray-600">Loading consultation summary...</span>
+      </div>
+    );
+  }
+
+  if (error || !consultationData) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[calc(100vh-8rem)]">
+        <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
+        <h2 className="text-xl font-bold text-gray-900 mb-2">Error Loading Summary</h2>
+        <p className="text-gray-600 mb-4">{error || 'Consultation data not found'}</p>
+        <Button onClick={() => navigate('/patient-dashboard')}>Return to Dashboard</Button>
+      </div>
+    );
+  }
+
+  // Map backend data to UI structure
+  const doctorName = consultationData.appointment?.doctor?.name || 'Doctor';
+  const doctorSpec = consultationData.appointment?.doctor?.specialization || 'Specialist';
+  const doctorImage = consultationData.appointment?.doctor?.profilePicture || '/doctors/default.jpg';
+  const consultDate = new Date(consultationData.createdAt || Date.now()).toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric'
+  });
+  const consultTime = new Date(consultationData.createdAt || Date.now()).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
   const consultation = {
-    id: 'CONS-2024-001',
-    date: new Date().toLocaleDateString('en-US', { 
-      month: 'long', 
-      day: 'numeric', 
-      year: 'numeric' 
-    }),
-    time: '10:30 AM',
+    id: consultationData.appointment?._id || consultationId,
+    date: consultDate,
+    time: consultTime,
     duration: '25 minutes',
     type: 'Video Consultation',
     doctor: {
-      name: 'Dr. Sarah Johnson',
-      specialization: 'Cardiologist',
-      image: '/doctors/sarah.jpg'
+      name: doctorName,
+      specialization: doctorSpec,
+      image: doctorImage
     },
-    diagnosis: 'Mild Hypertension (Stage 1)',
-    symptoms: ['Headache', 'Fatigue', 'Dizziness'],
+    diagnosis: consultationData.summary?.diagnosis_discussed || 'Not recorded',
+    symptoms: consultationData.summary?.key_symptoms || [],
     vitalSigns: {
-      bloodPressure: '142/90 mmHg',
-      heartRate: '78 bpm',
-      temperature: '98.6°F',
-      weight: '165 lbs'
+      bloodPressure: 'Not recorded',
+      heartRate: 'Not recorded',
+      temperature: 'Not recorded',
+      weight: 'Not recorded'
     },
-    prescriptions: [
-      {
-        name: 'Lisinopril',
-        dosage: '10mg',
-        frequency: 'Once daily',
-        duration: '30 days',
-        instructions: 'Take in the morning with water'
-      },
-      {
-        name: 'Aspirin',
-        dosage: '81mg',
-        frequency: 'Once daily',
-        duration: '30 days',
-        instructions: 'Take with food'
-      }
-    ],
+    prescriptions: consultationData.prescription?.medicines?.map((med: any) => ({
+      name: med.name,
+      dosage: med.dosage,
+      frequency: typeof med.frequency === 'string' ? med.frequency : 'As directed',
+      duration: med.duration_days ? `${med.duration_days} days` : 'As directed',
+      instructions: med.instructions
+    })) || [],
     recommendations: [
-      'Reduce sodium intake to less than 2,300mg per day',
-      'Exercise for at least 30 minutes, 5 days a week',
-      'Monitor blood pressure daily at home',
-      'Schedule follow-up appointment in 4 weeks',
-      'Maintain a healthy weight (target: 155 lbs)'
+      ...(consultationData.summary?.follow_up_instructions || []),
+      ...(consultationData.prescription?.additional_instructions || [])
     ],
-    labTests: [
-      'Complete Blood Count (CBC)',
-      'Lipid Panel',
-      'Basic Metabolic Panel'
-    ],
-    notes: 'Patient reports improvement in symptoms over the past week. Continue current medication regimen. Consider increasing dosage if blood pressure remains elevated at next visit.'
+    labTests: [],
+    notes: consultationData.summary?.patient_summary || consultationData.summary?.doctor_summary || 'No notes available.'
   };
 
   const timeline = [
@@ -286,11 +345,10 @@ export const ConsultationSummary = () => {
                       className="transition-transform hover:scale-110 touch-manipulation"
                     >
                       <Star
-                        className={`w-7 h-7 sm:w-8 sm:h-8 ${
-                          star <= rating
+                        className={`w-7 h-7 sm:w-8 sm:h-8 ${star <= rating
                             ? 'fill-yellow-400 text-yellow-400'
                             : 'text-gray-300'
-                        }`}
+                          }`}
                       />
                     </button>
                   ))}
@@ -344,24 +402,24 @@ export const ConsultationSummary = () => {
             <CardContent className="p-4 sm:p-5 md:p-6">
               <h3 className="text-sm sm:text-base font-semibold text-gray-900 mb-3 sm:mb-4">Next Steps</h3>
               <div className="space-y-2 sm:space-y-3">
-                <Button 
-                  variant="default" 
+                <Button
+                  variant="default"
                   className="w-full justify-between text-sm h-10 sm:h-11"
                   onClick={() => navigate('/patient-dashboard/book-appointment')}
                 >
                   <span>Book Follow-up</span>
                   <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </Button>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="w-full justify-between text-sm h-10 sm:h-11"
                   onClick={() => navigate('/patient-dashboard/medications')}
                 >
                   <span>Set Reminders</span>
                   <Pill className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </Button>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="w-full justify-between text-sm h-10 sm:h-11"
                   onClick={() => navigate('/patient-dashboard/chatbot')}
                 >

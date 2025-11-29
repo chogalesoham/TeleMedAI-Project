@@ -11,7 +11,9 @@ router.post('/', appointmentController.createAppointment);
 
 // Get appointments - IMPORTANT: Specific routes must come BEFORE /:id
 router.get('/stats', appointmentController.getAppointmentStats);
+router.get('/patient', appointmentController.getPatientAppointments);
 router.get('/patient/:patientId', appointmentController.getPatientAppointments);
+router.get('/doctor', appointmentController.getDoctorAppointments);
 router.get('/doctor/:doctorId', appointmentController.getDoctorAppointments);
 
 // Update appointment status

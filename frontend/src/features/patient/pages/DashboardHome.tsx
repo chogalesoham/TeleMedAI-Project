@@ -216,7 +216,9 @@ export const DashboardHome = () => {
                       </div>
                       <div className="flex items-center gap-2 sm:gap-3 sm:flex-col sm:items-end">
                         <div className="text-left sm:text-right">
-                          <p className="text-xs sm:text-sm font-medium text-gray-900">{appointment.timeSlot}</p>
+                          <p className="text-xs sm:text-sm font-medium text-gray-900">
+                            {appointment.timeSlot?.startTime} - {appointment.timeSlot?.endTime}
+                          </p>
                           <p className="text-xs sm:text-sm text-gray-600">{new Date(appointment.appointmentDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
                         </div>
                         <Badge variant={appointment.consultationMode === 'video' ? 'default' : 'secondary'} className="text-xs">

@@ -24,6 +24,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useWebRTC } from '@/hooks/useWebRTC';
 import AppointmentService, { Appointment } from '@/services/appointment.service';
+import ConsultationService from '@/services/consultation.service';
 
 export const LiveConsultation = () => {
     const navigate = useNavigate();
@@ -36,6 +37,11 @@ export const LiveConsultation = () => {
     const [appointment, setAppointment] = useState<Appointment | null>(null);
     const [isLoadingAppointment, setIsLoadingAppointment] = useState(true);
     const [appointmentError, setAppointmentError] = useState<string | null>(null);
+    const [isProcessing, setIsProcessing] = useState(false);
+
+    // Audio recording refs
+    const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+    const audioChunksRef = useRef<Blob[]>([]);
 
     // Fetch appointment to check approval status
     useEffect(() => {
@@ -114,15 +120,150 @@ export const LiveConsultation = () => {
         };
     }, []);
 
+    // Start audio recording when streams are available
+    useEffect(() => {
+        if (localStream && remoteStream && !mediaRecorderRef.current) {
+            startRecording();
+        }
+    }, [localStream, remoteStream]);
+
     const formatDuration = (seconds: number) => {
         const mins = Math.floor(seconds / 60);
         const secs = seconds % 60;
         return `${mins}:${secs.toString().padStart(2, '0')}`;
     };
 
-    const handleEndCall = () => {
+    const startRecording = () => {
+        try {
+            // Create a new audio context to mix both streams
+            const audioContext = new AudioContext();
+            const destination = audioContext.createMediaStreamDestination();
+
+            // Add local stream audio
+            if (localStream) {
+                const localAudioTracks = localStream.getAudioTracks();
+                if (localAudioTracks.length > 0) {
+                    const localSource = audioContext.createMediaStreamSource(
+                        new MediaStream(localAudioTracks)
+                    );
+                    localSource.connect(destination);
+                }
+            }
+
+            // Add remote stream audio
+            if (remoteStream) {
+                const remoteAudioTracks = remoteStream.getAudioTracks();
+                if (remoteAudioTracks.length > 0) {
+                    const remoteSource = audioContext.createMediaStreamSource(
+                        new MediaStream(remoteAudioTracks)
+                    );
+                    remoteSource.connect(destination);
+                }
+            }
+
+            // Create MediaRecorder with mixed audio
+            const mediaRecorder = new MediaRecorder(destination.stream, {
+                mimeType: 'audio/webm',
+            });
+
+            mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    audioChunksRef.current.push(event.data);
+                }
+            };
+
+            mediaRecorder.start();
+            mediaRecorderRef.current = mediaRecorder;
+            console.log('🎙️ Audio recording started');
+        } catch (error) {
+            console.error('Failed to start audio recording:', error);
+        }
+    };
+
+    const stopRecordingAndProcess = async () => {
+        return new Promise<void>((resolve) => {
+            if (!mediaRecorderRef.current) {
+                console.warn('No media recorder found - skipping AI processing');
+                resolve();
+                return;
+            }
+
+            if (mediaRecorderRef.current.state === 'inactive') {
+                console.warn('Media recorder already inactive');
+                resolve();
+                return;
+            }
+
+            mediaRecorderRef.current.onstop = async () => {
+                try {
+                    if (audioChunksRef.current.length === 0) {
+                        console.warn('No audio chunks recorded');
+                        resolve();
+                        return;
+                    }
+
+                    setIsProcessing(true);
+
+                    // Create audio blob
+                    const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+                    const audioFile = new File([audioBlob], `${consultationId}.webm`, {
+                        type: 'audio/webm',
+                    });
+
+                    console.log('🎙️ Audio recording stopped. File size:', (audioFile.size / 1024 / 1024).toFixed(2), 'MB');
+
+                    // Get patient data from appointment
+                    console.log('📥 Fetching patient health data from appointment...');
+                    const patientWithData = appointment?.patient as any;
+                    if (!patientWithData?.onboardingData) {
+                        throw new Error('Patient health data not found in appointment');
+                    }
+
+                    const patientData = {
+                        basicHealthProfile: patientWithData.onboardingData.basicHealthProfile || {},
+                        medicalHistory: patientWithData.onboardingData.medicalHistory || {},
+                        currentHealthStatus: patientWithData.onboardingData.currentHealthStatus || {},
+                    };
+
+                    // Process consultation with AI
+                    console.log('🤖 Processing consultation with AI...');
+                    const result = await ConsultationService.processConsultationAudio(
+                        audioFile,
+                        patientData
+                    );
+
+                    console.log('═══════════════════════════════════════════════');
+                    console.log('📋 FINAL CONSULTATION SUMMARY:');
+                    console.log('═══════════════════════════════════════════════');
+                    console.log(result);
+                    console.log('═══════════════════════════════════════════════');
+
+                    if (result.success) {
+                        // Redirect to doctor dashboard
+                        navigate('/doctor-dashboard');
+                    } else {
+                        console.error('❌ Failed to process consultation:', result.error);
+                        alert('Failed to process consultation. Please try again.');
+                    }
+                } catch (error) {
+                    console.error('❌ Error processing consultation:', error);
+                    alert('An error occurred while processing the consultation.');
+                } finally {
+                    setIsProcessing(false);
+                    resolve();
+                }
+            };
+
+            mediaRecorderRef.current.stop();
+        });
+    };
+
+    const handleEndCall = async () => {
+        // Stop recording and process audio
+        await stopRecordingAndProcess();
+
+        // End WebRTC call
         endCall();
-        navigate('/doctor-dashboard');
     };
 
     // Get connection status display
@@ -317,6 +458,27 @@ export const LiveConsultation = () => {
 
     return (
         <div className="h-[calc(100vh-8rem)] flex flex-col space-y-3 sm:space-y-4">
+            {/* Processing Overlay */}
+            {isProcessing && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
+                    <Card className="max-w-md w-full mx-4">
+                        <CardContent className="p-8 text-center">
+                            <Loader2 className="w-16 h-16 mx-auto text-primary animate-spin mb-4" />
+                            <h2 className="text-2xl font-bold mb-2">Processing Consultation...</h2>
+                            <p className="text-gray-600 mb-4">
+                                Our AI is transcribing the consultation and generating the summary.
+                            </p>
+                            <div className="space-y-2 text-sm text-gray-500">
+                                <p>✓ Recording saved</p>
+                                <p>⏳ Transcribing audio...</p>
+                                <p>⏳ Generating summary...</p>
+                                <p>⏳ Creating prescription...</p>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+            )}
+
             {/* Permission Error Banner */}
             {permissionError && (
                 <motion.div

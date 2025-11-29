@@ -44,6 +44,7 @@ app.use('/api/medical-reports', medicalReportRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/ai', require('./routes/preDiagnosis'));
+app.use('/api/consultations', require('./routes/consultation'));
 
 // Start Server
 server.listen(PORT, () => {

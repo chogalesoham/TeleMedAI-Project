@@ -219,7 +219,10 @@ export const useWebRTC = ({ consultationId, userType }: UseWebRTCProps) => {
 
                 // Initialize Socket.IO
                 const socket = io(SOCKET_URL, {
-                    transports: ['websocket', 'polling'],
+                    transports: ['websocket'], // Force WebSocket to avoid polling issues
+                    reconnection: true,
+                    reconnectionAttempts: 5,
+                    reconnectionDelay: 1000,
                 });
                 socketRef.current = socket;
 
@@ -307,8 +310,13 @@ export const useWebRTC = ({ consultationId, userType }: UseWebRTCProps) => {
                     setConnectionQuality('disconnected');
                 });
 
-                socket.on('disconnect', () => {
-                    console.log('❌ Disconnected from signaling server');
+                socket.on('disconnect', (reason) => {
+                    console.log('❌ Disconnected from signaling server:', reason);
+                    setConnectionQuality('disconnected');
+                });
+
+                socket.on('connect_error', (error) => {
+                    console.error('❌ Socket connection error:', error);
                     setConnectionQuality('disconnected');
                 });
 
