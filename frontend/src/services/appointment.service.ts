@@ -60,6 +60,14 @@ export interface Appointment {
         languages: string[];
         shortBio: string;
     };
+    preDiagnosisReport?: string | {
+        _id: string;
+        symptoms: string[];
+        aiDiagnosis: string;
+        severity: string;
+        recommendations: string[];
+        createdAt: Date;
+    };
 }
 
 export interface CreateAppointmentData {
@@ -259,6 +267,47 @@ class AppointmentService {
             return {
                 success: false,
                 error: error.response?.data?.error || 'Failed to fetch appointment statistics',
+            };
+        }
+    }
+
+    // Get patient's available reports
+    async getPatientReports() {
+        try {
+            const response = await axios.get(
+                `${API_URL}/appointments/reports/available`,
+                this.getAuthHeader()
+            );
+            return {
+                success: true,
+                data: response.data.data,
+                count: response.data.count,
+            };
+        } catch (error: any) {
+            console.error('Error fetching patient reports:', error);
+            return {
+                success: false,
+                error: error.response?.data?.error || 'Failed to fetch reports',
+            };
+        }
+    }
+
+    // Get appointment report (doctor only)
+    async getAppointmentReport(appointmentId: string) {
+        try {
+            const response = await axios.get(
+                `${API_URL}/appointments/${appointmentId}/report`,
+                this.getAuthHeader()
+            );
+            return {
+                success: true,
+                data: response.data.data,
+            };
+        } catch (error: any) {
+            console.error('Error fetching appointment report:', error);
+            return {
+                success: false,
+                error: error.response?.data?.error || 'Failed to fetch report',
             };
         }
     }

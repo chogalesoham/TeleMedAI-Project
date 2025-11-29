@@ -5,5 +5,6 @@ const { authMiddleware: protect } = require('../middleware/auth');
 
 router.post('/', protect, consultationController.saveConsultation);
 router.get('/:id', protect, consultationController.getConsultation);
+router.patch('/:id/prescription', protect, consultationController.updatePrescription);
 
 module.exports = router;

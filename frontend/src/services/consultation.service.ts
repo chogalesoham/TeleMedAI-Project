@@ -150,6 +150,46 @@ export class ConsultationService {
             };
         }
     }
+
+    /**
+     * Update prescription (Doctor only)
+     */
+    static async updatePrescription(consultationId: string, prescription: any): Promise<{ success: boolean; data?: any; error?: string }> {
+        try {
+            const token = localStorage.getItem('token');
+            console.log('📝 Updating prescription for consultation:', consultationId);
+
+            const response = await fetch(`/api/consultations/${consultationId}/prescription`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ prescription }),
+            });
+
+            console.log('📡 Response status:', response.status);
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('❌ Server error:', errorText);
+                return {
+                    success: false,
+                    error: `Server error: ${response.status} - ${errorText}`
+                };
+            }
+
+            const result = await response.json();
+            console.log('✅ Prescription updated:', result);
+            return result;
+        } catch (error) {
+            console.error('Error updating prescription:', error);
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Failed to update prescription'
+            };
+        }
+    }
 }
 
 export default ConsultationService;

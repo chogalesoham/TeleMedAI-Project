@@ -21,6 +21,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import PaymentModal, { PaymentData } from '@/components/appointments/PaymentModal';
 import AppointmentService from '@/services/appointment.service';
+import { ReportSelector } from '@/components/shared/ReportSelector';
 import { toast } from 'sonner';
 
 interface TimeSlot {
@@ -53,6 +54,7 @@ export const AppointmentBooking = () => {
   const [consultationMode, setConsultationMode] = useState<'tele' | 'in_person'>('tele');
   const [reasonForVisit, setReasonForVisit] = useState('');
   const [symptoms, setSymptoms] = useState('');
+  const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -105,6 +107,7 @@ export const AppointmentBooking = () => {
         consultationMode,
         reasonForVisit,
         symptoms,
+        preDiagnosisReportId: selectedReportId,
         payment: paymentData,
       };
 
@@ -315,15 +318,11 @@ export const AppointmentBooking = () => {
                   rows={3}
                 />
               </div>
-              <div>
-                <Label htmlFor="symptoms">Symptoms (Optional)</Label>
-                <Textarea
-                  id="symptoms"
-                  placeholder="List any symptoms you're experiencing..."
-                  value={symptoms}
-                  onChange={(e) => setSymptoms(e.target.value)}
-                  className="mt-2"
-                  rows={3}
+
+              <div className="pt-2 border-t">
+                <ReportSelector
+                  selectedReportId={selectedReportId}
+                  onSelect={setSelectedReportId}
                 />
               </div>
             </CardContent>
@@ -422,7 +421,7 @@ export const AppointmentBooking = () => {
         currency={doctor.consultationFee?.currency || 'INR'}
         doctorName={doctor.name}
       />
-    </div>
+    </div >
   );
 };
 

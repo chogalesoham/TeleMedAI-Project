@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Loader2, Calendar, CheckCircle, XCircle } from 'lucide-react';
+import { Loader2, Calendar, CheckCircle, XCircle, FileText } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -16,15 +16,17 @@ import AppointmentCard from '@/components/appointments/AppointmentCard';
 import AppointmentService, { Appointment } from '@/services/appointment.service';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { PreDiagnosisReportViewer } from '@/components/shared/PreDiagnosisReportViewer';
 
 export const AppointmentRequests = () => {
     const navigate = useNavigate();
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
-    const [actionType, setActionType] = useState<'approve' | 'reject' | null>(null);
+    const [actionType, setActionType] = useState<'approve' | 'reject' | 'view-report' | null>(null);
     const [notes, setNotes] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [reportData, setReportData] = useState<any>(null);
 
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     const userId = user.id || user._id;
@@ -61,6 +63,24 @@ export const AppointmentRequests = () => {
         setNotes('');
     };
 
+    const handleViewReport = async (appointment: Appointment) => {
+        try {
+            setIsLoading(true);
+            const response = await AppointmentService.getAppointmentReport(appointment._id);
+            if (response.success) {
+                setReportData(response.data);
+                setSelectedAppointment(appointment);
+                setActionType('view-report');
+            } else {
+                toast.error(response.error || 'Failed to load report');
+            }
+        } catch (error) {
+            toast.error('Error loading report');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     const handleConfirmAction = async () => {
         if (!selectedAppointment || !actionType) return;
 
@@ -94,6 +114,7 @@ export const AppointmentRequests = () => {
         setSelectedAppointment(null);
         setActionType(null);
         setNotes('');
+        setReportData(null);
     };
 
     const handleViewDetails = (id: string) => {
@@ -160,6 +181,19 @@ export const AppointmentRequests = () => {
                                 onReject={() => handleRejectClick(appointment)}
                                 onViewDetails={handleViewDetails}
                             />
+                            {appointment.preDiagnosisReport && (
+                                <div className="mt-2 flex justify-end">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                                        onClick={() => handleViewReport(appointment)}
+                                    >
+                                        <FileText className="w-4 h-4 mr-2" />
+                                        View Pre-Diagnosis Report
+                                    </Button>
+                                </div>
+                            )}
                         </motion.div>
                     ))}
                 </div>
@@ -181,11 +215,19 @@ export const AppointmentRequests = () => {
                                     Reject Appointment
                                 </>
                             )}
+                            {actionType === 'view-report' && (
+                                <>
+                                    <FileText className="w-5 h-5 text-blue-600" />
+                                    Pre-Diagnosis Report
+                                </>
+                            )}
                         </DialogTitle>
                         <DialogDescription>
                             {actionType === 'approve'
                                 ? 'Confirm this appointment and enable video call for the patient.'
-                                : 'Provide a reason for rejecting this appointment request.'}
+                                : actionType === 'reject'
+                                    ? 'Provide a reason for rejecting this appointment request.'
+                                    : 'Review the patient\'s pre-diagnosis AI report.'}
                         </DialogDescription>
                     </DialogHeader>
 
@@ -263,6 +305,15 @@ export const AppointmentRequests = () => {
                                         </>
                                     )}
                                 </Button>
+                            </div>
+                        </div>
+                    )}
+
+                    {actionType === 'view-report' && reportData && (
+                        <div className="space-y-4">
+                            <PreDiagnosisReportViewer report={reportData} />
+                            <div className="flex justify-end">
+                                <Button onClick={handleCloseDialog}>Close</Button>
                             </div>
                         </div>
                     )}

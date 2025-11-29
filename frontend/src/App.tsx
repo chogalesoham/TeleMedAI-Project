@@ -26,6 +26,7 @@ import {
   Settings as DoctorSettings,
   LiveConsultation as DoctorLiveConsultation
 } from "@/features/doctor";
+import { DoctorConsultationSummary } from "@/features/doctor/pages/DoctorConsultationSummary";
 
 // Patient Dashboard Pages
 import {
@@ -182,6 +183,7 @@ const App = () => (
             <Route path="appointment-history" element={<AppointmentHistory />} />
             <Route path="appointments" element={<Appointments />} />
             <Route path="live-consultation" element={<DoctorLiveConsultation />} />
+            <Route path="consultation-summary" element={<DoctorConsultationSummary />} />
             <Route path="reports" element={<Reports />} />
             <Route path="analytics" element={<Analytics />} />
             <Route path="settings" element={<DoctorSettings />} />

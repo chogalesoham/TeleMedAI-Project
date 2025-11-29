@@ -2,6 +2,7 @@ const Appointment = require('../models/Appointment');
 const Notification = require('../models/Notification');
 const User = require('../models/User');
 const DoctorOnboarding = require('../models/DoctorOnboarding');
+const PatientOnboarding = require('../models/PatientOnboarding');
 
 // Create new appointment (Patient books appointment)
 exports.createAppointment = async (req, res) => {
@@ -13,7 +14,8 @@ exports.createAppointment = async (req, res) => {
             consultationMode,
             reasonForVisit,
             symptoms,
-            payment
+            payment,
+            preDiagnosisReportId
         } = req.body;
 
         const patientId = req.user.userId; // From auth middleware
@@ -58,6 +60,7 @@ exports.createAppointment = async (req, res) => {
             consultationMode,
             reasonForVisit,
             symptoms: symptoms || '',
+            preDiagnosisReport: preDiagnosisReportId || null,
             payment: {
                 doctorFee,
                 platformFee,
@@ -213,7 +216,8 @@ exports.getAppointmentById = async (req, res) => {
 
         const appointment = await Appointment.findById(id)
             .populate('patient', 'name email phone profilePicture dateOfBirth gender')
-            .populate('doctor', 'name email phone profilePicture');
+            .populate('doctor', 'name email phone profilePicture')
+            .populate('preDiagnosisReport');
 
         if (!appointment) {
             return res.status(404).json({
@@ -225,10 +229,17 @@ exports.getAppointmentById = async (req, res) => {
         // Get doctor profile details
         const doctorProfile = await DoctorOnboarding.findOne({ userId: appointment.doctor._id });
 
+        // Get patient onboarding data for doctor consultations
+        const patientOnboarding = await PatientOnboarding.findOne({ userId: appointment.patient._id });
+
         res.status(200).json({
             success: true,
             data: {
                 ...appointment.toObject(),
+                patient: {
+                    ...appointment.patient.toObject(),
+                    onboardingData: patientOnboarding || null
+                },
                 doctorProfile: doctorProfile ? {
                     specialties: doctorProfile.specialties,
                     languages: doctorProfile.languages,
@@ -463,6 +474,134 @@ exports.getAppointmentStats = async (req, res) => {
         res.status(500).json({
             success: false,
             error: 'Failed to fetch appointment statistics',
+            details: error.message
+        });
+    }
+};
+
+// Get pre-diagnosis report for appointment (Doctor only)
+exports.getAppointmentReport = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user.userId;
+
+        // Find appointment and populate report
+        const appointment = await Appointment.findById(id)
+            .populate('preDiagnosisReport')
+            .populate('doctor', '_id');
+
+        if (!appointment) {
+            return res.status(404).json({
+                success: false,
+                error: 'Appointment not found'
+            });
+        }
+
+        // Verify user is the assigned doctor
+        if (appointment.doctor._id.toString() !== userId) {
+            return res.status(403).json({
+                success: false,
+                error: 'Only the assigned doctor can view the pre-diagnosis report'
+            });
+        }
+
+        if (!appointment.preDiagnosisReport) {
+            return res.status(404).json({
+                success: false,
+                error: 'No pre-diagnosis report attached to this appointment'
+            });
+        }
+
+        const report = appointment.preDiagnosisReport;
+
+        // Transform report to match frontend expectations
+        const topDiagnosis = report.differentialDiagnoses && report.differentialDiagnoses.length > 0
+            ? report.differentialDiagnoses[0].condition
+            : 'General consultation';
+
+        const severity = report.urgency?.level?.toLowerCase() || 'low';
+
+        const recommendations = [
+            ...(report.lifestyleAdvice || []),
+            ...(report.dietPlan || [])
+        ].join('\n');
+
+        const transformedReport = {
+            _id: report._id,
+            symptoms: report.symptoms?.join(', ') || '',
+            diagnosis: topDiagnosis,
+            severity: severity,
+            recommendations: recommendations || 'Follow up with doctor',
+            createdAt: report.createdAt
+        };
+
+        res.status(200).json({
+            success: true,
+            data: transformedReport
+        });
+    } catch (error) {
+        console.error('Error fetching appointment report:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to fetch report',
+            details: error.message
+        });
+    }
+};
+
+// Get patient's available reports (for booking selection)
+exports.getPatientReports = async (req, res) => {
+    try {
+        const patientId = req.user.userId;
+        const Report = require('../models/Report');
+
+        // Get reports from last 30 days
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+        const reports = await Report.find({
+            userId: patientId,
+            createdAt: { $gte: thirtyDaysAgo }
+        })
+            .sort({ createdAt: -1 })
+            .limit(10);
+
+        // Transform reports to match frontend expectations
+        const transformedReports = reports.map(report => {
+            // Get the top diagnosis
+            const topDiagnosis = report.differentialDiagnoses && report.differentialDiagnoses.length > 0
+                ? report.differentialDiagnoses[0].condition
+                : 'General consultation';
+
+            // Map urgency level to severity
+            const severity = report.urgency?.level?.toLowerCase() || 'low';
+
+            // Combine lifestyle advice and diet plan for recommendations
+            const recommendations = [
+                ...(report.lifestyleAdvice || []),
+                ...(report.dietPlan || [])
+            ].join('\n');
+
+            return {
+                _id: report._id,
+                symptoms: report.symptoms?.join(', ') || '',
+                diagnosis: topDiagnosis,
+                severity: severity,
+                recommendations: recommendations || 'Follow up with doctor',
+                createdAt: report.createdAt
+            };
+        });
+
+        res.status(200).json({
+            success: true,
+            count: transformedReports.length,
+            data: transformedReports
+        });
+    } catch (error) {
+        console.error('Error fetching patient reports:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to fetch reports',
             details: error.message
         });
     }

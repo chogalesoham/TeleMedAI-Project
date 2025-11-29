@@ -43,6 +43,11 @@ const appointmentSchema = new mongoose.Schema({
         trim: true,
         default: ''
     },
+    preDiagnosisReport: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Report',
+        default: null
+    },
 
     // Status Management
     status: {

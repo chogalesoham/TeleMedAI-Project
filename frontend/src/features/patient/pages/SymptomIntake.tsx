@@ -20,6 +20,8 @@ interface Message {
   options?: string[];
 }
 
+import { getStoredUser } from '@/services/auth.service';
+
 const SymptomIntake = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -41,14 +43,16 @@ const SymptomIntake = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const MAX_ROUNDS = 6;
 
-  const userId = "6745d606305607062483804d";
+  const user = getStoredUser();
+  const userId = user?.id || user?._id;
+
   const patientInfo = {
-    name: "Test Patient",
-    age: 30,
-    gender: "Male",
-    existingDiseases: ["None"],
-    allergies: ["None"],
-    medications: ["None"],
+    name: user?.name || "Patient",
+    age: user?.age || 30,
+    gender: user?.gender || "Not specified",
+    existingDiseases: user?.existingDiseases || ["None"],
+    allergies: user?.allergies || ["None"],
+    medications: user?.medications || ["None"],
     vitals: {
       heartRate: "72 bpm",
       bloodPressure: "120/80 mmHg",
